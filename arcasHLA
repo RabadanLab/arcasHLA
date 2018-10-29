@@ -1,0 +1,38 @@
+#!/bin/bash
+#-----------------------------------------------------------------------------
+
+if [ "$1" == "extract" ]; then
+
+    python ./scripts/extract.py ${@:2}
+
+elif [ "$1" == "genotype" ]; then
+
+    python ./scripts/genotype.py ${@:2}
+
+elif [ "$1" == "table" ]; then
+
+    python ./scripts/table.py ${@:2}
+
+elif [ "$1" == "reference" ]; then
+
+    python ./scripts/build_reference.py ${@:2}
+
+elif [ "$1" == "partial" ]; then
+
+    python ./scripts/partial.py ${@:2}
+
+else
+    echo
+    echo "Usage: arcasHLA <command> [options]"
+    echo
+    echo "    extract        extracts chromosome 6 reads from bam"
+    echo "    genotype       types HLA genes from extracted reads"
+    echo "    partial        types partial HLA alleles from extracted reads"
+    echo "    table          processes results into a tab-separated table"
+    echo "    reference      check or update HLA reference"
+    echo
+    echo "Note: run any command with --help to view required fields, options"
+    echo
+fi
+
+#-------------------------------------------------------------------------------
