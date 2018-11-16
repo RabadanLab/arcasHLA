@@ -375,7 +375,7 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, population,
     '''
     # Returns number of reads explained by an allele
     def get_count(a):
-        observed_eqs = set.union(*[allele_eq[idx] for idx in a])
+        observed_eqs = allele_eq[a]
         return sum([eqs[idx][1] for idx in observed_eqs])
     
     # Returns number of reads explained by a pair of alleles
