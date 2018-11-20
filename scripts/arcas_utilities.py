@@ -27,6 +27,9 @@ import re
 import logging as log
 from subprocess import PIPE, run
 
+__version__     = '1.0'
+__date__        = 'November 2018'
+
 #-------------------------------------------------------------------------------
 
 def process_allele(allele,n,keep_alpha = True):
@@ -72,10 +75,13 @@ def run_command(command, message = ''):
     if type(command) == list:
         command = ' '.join(command)
 
-    if message: log.info(message + command)
+    if message: log.info(''.join([message,'\n\n\t', command,'\n']))
         
     output = run(command, shell=True, stdout=PIPE, stderr=PIPE)
         
     return output
+
+def hline():
+    log.info('-'*80)
 
 #-------------------------------------------------------------------------------
