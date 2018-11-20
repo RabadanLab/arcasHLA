@@ -33,11 +33,10 @@ from datetime import date
 from os.path import isfile
 from argparse import RawTextHelpFormatter
 from arcas_utilities import (process_allele, check_path, 
-                             remove_files, run_command)
+                             remove_files, run_command, hline)
 
 __version__     = '1.0'
 __date__        = 'November 2018'
-
 
 #-------------------------------------------------------------------------------
 #   Extract Reads
@@ -57,7 +56,7 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
                     temp, threads, keep_files):
     '''Extracts reads from chromosome 6 and alts/decoys if applicable.'''
     
-    log.info(f'\n[extract] extracting reads from {bam}')
+    log.info(f'[extract] Extracting reads from {bam}')
     
     file_list = []
     sample = os.path.splitext(os.path.basename(bam))[0]
@@ -80,13 +79,13 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
         chrom = '6'
 
     # Extract BAM header
-    message = '[extract] extracting chromosome 6: '
+    message = '[extract] Extracting chromosome 6: '
     command = ['samtools', 'view', '-H', '-@'+threads]
     command.extend([bam, '-o', hla_filtered])
     run_command(command, message)
     
     # Extracted reads mapped to chromosome 6
-    message = '[extract] extracting chromosome 6: '
+    message = '[extract] Extracting chromosome 6: '
     command = ['samtools', 'view', '-@'+threads]
     if paired: command.append('-f 2')
     else: command.append('-F 4')
@@ -95,7 +94,7 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
     
     # Extract unmapped reads
     if unmapped:
-        message = '[extract] extracting chromosome 6: '
+        message = '[extract] Extracting chromosome 6: '
         command = ['samtools', 'view', '-@'+threads]
         
         if paired: command.append('-f 12')
@@ -117,7 +116,7 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
 
 
     # Convert SAM to BAM
-    message = '[extract] converting SAM to BAM: '
+    message = '[extract] Converting SAM to BAM: '
     command = ['samtools', 'view', '-Sb', '-@'+threads,
                 hla_filtered, '>', hla_filtered_bam]    
     run_command(command, message)
@@ -126,13 +125,13 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
     # Sort BAM
     hla_sorted = ''.join([temp, sample, '.hla.sorted.bam'])
     file_list.append(hla_sorted)
-    message = '[extract] sorting bam: '
+    message = '[extract] Sorting bam: '
     command = ['samtools', 'sort', '-n', '-@'+threads, 
                 hla_filtered_bam, '-o', hla_sorted]
     run_command(command, message)
 
     # Convert BAM to FASTQ and compress
-    message = '[extract] converting bam to fastq: '
+    message = '[extract] Converting bam to fastq: '
     command = ['bedtools', 'bamtofastq', '-i', hla_sorted]
     if paired:
         fq1 = ''.join([outdir, sample, '.extracted.1.fq'])
@@ -224,6 +223,9 @@ if __name__ == '__main__':
         log_file = args.log
     else:
         log_file = ''.join([outdir,sample,'.extract.log'])
+        
+    with open(log_file, 'w'):
+        pass
     
     if args.verbose:
         handlers = [log.FileHandler(log_file), log.StreamHandler()]
@@ -239,9 +241,13 @@ if __name__ == '__main__':
                         handlers=handlers)
         
     log.info('')
+    hline()
     log.info(f'[log] Date: %s', str(date.today()))
     log.info(f'[log] Sample: %s', sample)
     log.info(f'[log] Input file: %s', args.bam)
+    log.info('[log] Read type: {}-end'
+             .format( 'paired' if args.paired else 'single'))
+    hline()
     
     with open('database/decoys_alts.p', 'rb') as file:
         alts = pickle.load(file)
@@ -254,5 +260,6 @@ if __name__ == '__main__':
                   temp,
                   args.threads,
                   args.keep_files)
+    hline()
     log.info('')
 #-------------------------------------------------------------------------------
