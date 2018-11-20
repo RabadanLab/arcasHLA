@@ -40,7 +40,7 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from arcas_utilities import process_allele, run_command, get_gene
+from arcas_utilities import process_allele, run_command, get_gene, hline
 
 __version__     = '1.0'
 __date__        = 'November 2018'
@@ -78,7 +78,7 @@ def fetch_hla_dat():
     '''Clones IMGTHLA github to database.'''
     
     if isdir(IMGTHLA):
-        run_command(['rm', '-rf', IMGTHLA], '', False)
+        run_command(['rm', '-rf', IMGTHLA])
         
     command = ['git', 'clone', IMGTHLA_git, IMGTHLA]
     run_command(command,
@@ -90,12 +90,13 @@ def checkout_version(commithash):
     command = ['git', '-C', IMGTHLA, 'checkout']
     run_command(command,'[reference] checking out IMGT/HLA:')
         
-def hla_dat_version():
+def hla_dat_version(print_version = False):
     '''Returns commithash of downloaded IMGTHLA database.'''
 
-    results = run_command(['git', '-C', IMGTHLA, 'show'],'',False)
+    results = run_command(['git', '-C', IMGTHLA, 'show'])
     output = results.stdout.decode()
-    log.info(output)
+    if print_version:
+        log.info(output)
     lines = output.split('\n')
     commithash = lines[0].split()[1]
     
@@ -211,7 +212,7 @@ def process_hla_dat():
 #   Saving reference files
 #-------------------------------------------------------------------------------
     
-def write_reference(sequences, info, fasta, idx, database, type, verbose):
+def write_reference(sequences, info, fasta, idx, database, type):
     '''Writes and idxes HLA references.'''
     with open(fasta,'w') as file:
         SeqIO.write(sequences, file, 'fasta')
@@ -226,25 +227,25 @@ def write_reference(sequences, info, fasta, idx, database, type, verbose):
 #-------------------------------------------------------------------------------
 #   Constructing reference
 #-------------------------------------------------------------------------------
+
+def get_exon_combinations():
+    '''Generates exon combinations used in partial allele typing.'''
+    exon_combinations = []
+    exon_set = set()
+    for i in range(2,8):
+        exon_set |= {str(i)}
+        exon_combinations.append(sorted(exon_set))
+        if i > 2:
+            exon_combinations.append(sorted(exon_set | {'1'}))
+    return exon_combinations
     
 def build_fasta():
     '''Constructs HLA reference from processed sequences and exon locations.'''
     
     log.info('[reference] IMGT/HLA database version:\n')
-    hla_dat_version(verbose)
+    hla_dat_version(True)
     
     log.info('[reference] processing IMGT/HLA database')
-    
-    # Generates exon combinations used in partial allele typing
-    def get_exon_combinations():
-        exon_combinations = []
-        exon_set = set()
-        for i in range(2,8):
-            exon_set |= {str(i)}
-            exon_combinations.append(sorted(exon_set))
-            if i > 2:
-                exon_combinations.append(sorted(exon_set | {'1'}))
-        return exon_combinations
     
     # Constructs cDNA sequences for alleles and adds UTRs to the set of 
     # non-coding sequences
@@ -415,13 +416,17 @@ if __name__ == '__main__':
     
     parser.add_argument('--update', 
                         action = 'count', 
-                        help='force update\n\n')
+                        help='update to latest IMGT/HLA version\n\n')
                         
     parser.add_argument('--version', 
                         type = str, 
                         help='checkout IMGT/HLA version using commithash\n\n', 
                         default=False,
                         metavar='',)
+    
+    parser.add_argument('--rebuild', 
+                        help='rebuild HLA database\n\n', 
+                        action='count')
                         
     parser.add_argument('-v',
                         '--verbose', 
@@ -437,10 +442,14 @@ if __name__ == '__main__':
         log.basicConfig(format = '%(message)s')
         
     log.info('')
+    hline()
         
     if args.update:
         log.info('[reference] updating HLA reference')
         fetch_hla_dat()
+        build_fasta()
+        
+    elif args.rebuild:
         build_fasta()
         
     if args.version:
@@ -449,5 +458,6 @@ if __name__ == '__main__':
 
     check_ref()
     
+    hline()
     log.info('')
 #-------------------------------------------------------------------------------
