@@ -113,7 +113,7 @@ To update the reference to the latest IMGT/HLA version, run
 ```
 arcasHLA reference --update
 ```
-If you are running multiple tools to type HLAs, it can be helpful to use the same version of IMGT/HLA. You can select the version you like using the commithash from [the IMGT/HLA github](https://github.com/ANHIG/IMGTHLA/commits/Latest).
+If you are running multiple tools to type HLAs, it can be helpful to use the same version of IMGT/HLA. You can select the version you like using the commithash from the [IMGT/HLA Github](https://github.com/ANHIG/IMGTHLA/commits/Latest).
 
 ```
 arcasHLA reference --version [commithash]
@@ -128,3 +128,7 @@ arcasHLA reference --rebuild
 - `--version` : checkout IMGT/HLA version using commithash
 - `--rebuild` : rebuild HLA database
 - `-v, --verbose`     : verbosity (default: False)   
+
+## Citation ##
+R. Orenbuch, I. Filip, D. Comito, J. Shaman, I. Pe’er, and R. Rabadan. arcasHLA:
+high resolution HLA typing from RNA seq. bioRxiv doi: [10.1101/479824](https://doi.org/10.1101/479824)
