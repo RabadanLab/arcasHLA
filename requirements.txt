@@ -1,0 +1,5 @@
+biopython==1.71
+numpy==1.14.3
+pandas==0.23.0
+python-dateutil==2.7.3
+scipy==1.1.0

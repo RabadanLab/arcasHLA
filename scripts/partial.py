@@ -50,9 +50,9 @@ __date__        = 'November 2018'
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
-partial_p       = 'database/hla_partial.p'
-partial_idx     = 'database/hla_partial.idx'
-hla_freq        = 'database/hla_freq.tsv'
+partial_p       = 'dat/ref/hla_partial.p'
+partial_idx     = 'dat/ref/hla_partial.idx'
+hla_freq        = 'dat/info/hla_freq.tsv'
 
 #-------------------------------------------------------------------------------
 # Process transcript assembly output
@@ -372,15 +372,15 @@ if __name__ == '__main__':
                         
     parser.add_argument('--log', 
                         type=str,
-                        help='log file for run summary\n  '+
+                        help='log file for run summary\n'+
                              'default: sample.genotype.log\n\n',
                         default=None, 
                         metavar='')
     
     parser.add_argument('-g',
                         '--genes',
-                        help='comma separated list of HLA genes\n  '+
-                             'default: all\n' + '\n  '.join(wrap('  options: ' +
+                        help='comma separated list of HLA genes\n'+
+                             'default: all\n' + '\n'.join(wrap('options: ' +
                              ', '.join(sorted(genes)), 60)) +'\n\n',
                         default='all', 
                         metavar='',

@@ -33,6 +33,7 @@ from argparse import RawTextHelpFormatter
 from os.path import isfile, isdir
 from subprocess import PIPE, run
 
+from textwrap import wrap
 from scipy import stats
 from collections import defaultdict
 
@@ -40,7 +41,8 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from arcas_utilities import process_allele, run_command, get_gene, hline
+from arcas_utilities import (process_allele, run_command, get_gene, 
+                             hline, check_path)
 
 __version__     = '1.0'
 __date__        = 'November 2018'
@@ -49,15 +51,16 @@ __date__        = 'November 2018'
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
-IMGTHLA         = 'database/IMGTHLA/'
+IMGTHLA         = 'dat/IMGTHLA/'
 IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
-hla_dat         = 'database/IMGTHLA/hla.dat'
-hla_fa          = 'database/hla.fasta'
-partial_fa      = 'database/hla_partial.fasta'
-hla_p           = 'database/hla.p'
-partial_p       = 'database/hla_partial.p'
-hla_idx         = 'database/hla.idx'
-partial_idx     = 'database/hla_partial.idx'
+hla_dat         = 'dat/IMGTHLA/hla.dat'
+hla_fa          = 'dat/ref/hla.fasta'
+partial_fa      = 'dat/ref/hla_partial.fasta'
+hla_p           = 'dat/ref/hla.p'
+partial_p       = 'dat/ref/hla_partial.p'
+hla_idx         = 'dat/ref/hla.idx'
+partial_idx     = 'dat/ref/hla_partial.idx'
+parameters      = 'dat/info/parameters.p'
 
 #-------------------------------------------------------------------------------
 #   Fetch and process IMGTHLA database
@@ -93,14 +96,12 @@ def checkout_version(commithash):
 def hla_dat_version(print_version = False):
     '''Returns commithash of downloaded IMGTHLA database.'''
 
-    results = run_command(['git', '-C', IMGTHLA, 'show'])
-    output = results.stdout.decode()
+    results = run_command(['git', '-C', IMGTHLA, 'rev-parse HEAD'])
+    commit = results.stdout.decode()
     if print_version:
-        log.info(output)
-    lines = output.split('\n')
-    commithash = lines[0].split()[1]
+        log.info(commit)
     
-    return commithash
+    return commit
 
 def process_hla_dat():
     '''Processes IMGTHLA database, returning HLA sequences, exon locations, 
@@ -403,6 +404,9 @@ def build_fasta():
     
 if __name__ == '__main__':
 
+    with open(parameters, 'rb') as file:
+        _, _, versions = pickle.load(file)
+
     parser = argparse.ArgumentParser(prog='arcasHLA reference',
                                      usage='%(prog)s [options]',
                                      add_help=False,
@@ -418,15 +422,23 @@ if __name__ == '__main__':
                         action = 'count', 
                         help='update to latest IMGT/HLA version\n\n')
                         
+    parser.add_argument('--rebuild', 
+                        help='rebuild HLA database\n\n', 
+                        action='count')
+                        
     parser.add_argument('--version', 
+                        type = str, 
+                        help='checkout IMGT/HLA version using version\n' + \
+                             '\n'.join(wrap('options: ' + 
+                             ', '.join(sorted(versions.keys())), 60)) +'\n\n',
+                        default=False,
+                        metavar='',)
+                        
+    parser.add_argument('--commit', 
                         type = str, 
                         help='checkout IMGT/HLA version using commithash\n\n', 
                         default=False,
                         metavar='',)
-    
-    parser.add_argument('--rebuild', 
-                        help='rebuild HLA database\n\n', 
-                        action='count')
                         
     parser.add_argument('-v',
                         '--verbose', 
@@ -443,20 +455,32 @@ if __name__ == '__main__':
         
     log.info('')
     hline()
-        
+    
+    check_path('dat/ref')
+
     if args.update:
-        log.info('[reference] updating HLA reference')
+        log.info('[reference] Updating HLA reference')
         fetch_hla_dat()
         build_fasta()
         
     elif args.rebuild:
         build_fasta()
         
-    if args.version:
-        checkout_version(args.version)
+    elif args.version:
+        check_ref()
+        if args.version not in versions:
+            sys.exit('[reference] Error: invalid version.')
+        checkout_version(versions[args.version])
+        build_fasta()
+        
+    elif args.commit:
+        check_ref()
+        checkout_version(args.commit)
         build_fasta()
 
-    check_ref()
+    else:
+        check_ref()
+        hla_dat_version(True)
     
     hline()
     log.info('')

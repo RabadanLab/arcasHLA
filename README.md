@@ -15,6 +15,25 @@ arcasHLA requires the following Python modules:
 - NumPy
 - Pandas
 
+### Test ###
+Extract reads:
+```
+./arcasHLA extract test/test.bam -o test/output --paired -v
+```
+Genotype (this will set up the reference if running for the first time):
+```
+./arcasHLA genotype test/output/test.extracted.1.fq.gz test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1 -o test/output -v
+```
+Expected output in `test.genotype.json`:
+```
+{"A": ["A*01:01:01", "A*03:01:01"], 
+ "B": ["B*39:01:01", "B*07:02:01"], 
+ "C": ["C*08:01:01", "C*01:02:01"], 
+ "DPB1": ["DPB1*15:01:01", "DPB1*02:01:02"], 
+ "DQA1": ["DQA1*05:03:01", "DQA1*01:01:01"], 
+ "DQB1": ["DQB1*06:09:01", "DQB1*02:02:01"]}
+```
+
 ### Usage ###
 
 To see the list of available tools, simply enter `arcasHLA`. To view the required and optional arguments for any of the tools enter `arcasHLA [command] -h`.

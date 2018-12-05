@@ -51,9 +51,10 @@ __date__        = 'November 2018'
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
-hla_p    = 'database/hla.p'
-hla_idx  = 'database/hla.idx'
-hla_freq = 'database/hla_freq.tsv'
+hla_p      = 'dat/ref/hla.p'
+hla_idx    = 'dat/ref/hla.idx'
+hla_freq   = 'dat/info/hla_freq.tsv'
+parameters = 'dat/info/parameters.p'
 
 #-----------------------------------------------------------------------------
 # Process and align FASTQ input
@@ -649,8 +650,8 @@ def arg_check_threshold(parser, arg):
     
 if __name__ == '__main__':
     
-    with open('database/parameters.p', 'rb') as file:
-        genes, populations, databases = pickle.load(file)
+    with open(parameters, 'rb') as file:
+        genes, populations, _ = pickle.load(file)
     
     parser = argparse.ArgumentParser(prog='arcasHLA genotype',
                                  usage='%(prog)s [options] FASTQs ' + 
@@ -673,15 +674,15 @@ if __name__ == '__main__':
                         
     parser.add_argument('--log', 
                         type=str,
-                        help='log file for run summary\n  '+
+                        help='log file for run summary\n'+
                              'default: sample.genotype.log\n\n',
                         default=None, 
                         metavar='')
     
     parser.add_argument('-g',
                         '--genes',
-                        help='comma separated list of HLA genes\n  '+
-                             'default: all\n' + '\n  '.join(wrap('  options: ' +
+                        help='comma separated list of HLA genes\n'+
+                             'default: all\n' + '\n'.join(wrap('options: ' +
                              ', '.join(sorted(genes)), 60)) +'\n\n',
                         default='all', 
                         metavar='',
@@ -689,8 +690,8 @@ if __name__ == '__main__':
     
     parser.add_argument('-p',
                         '--population', 
-                        help= 'sample population\n  default: prior\n' + 
-                              '\n  '.join(wrap('  options: ' + 
+                        help= 'sample population\ndefault: prior\n' + 
+                              '\n'.join(wrap('options: ' + 
                               ', '.join(sorted(populations)), 60)) +'\n\n',
                         default='prior', 
                         metavar='',
@@ -809,6 +810,7 @@ if __name__ == '__main__':
     prior = prior.set_index('allele').to_dict('index')
        
     # checks if HLA reference exists
+    check_path('dat/ref')
     check_ref()
     
     # loads reference information

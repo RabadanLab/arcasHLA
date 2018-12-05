@@ -16,44 +16,32 @@
 #   Requirements
 #-----------------------------------------------------------------------------
 
-missing=$false
 if [ ! -x "$(command -v kallisto pseudo)" ]; then
-    echo "Missing dependency: Kallisto v0.44.0"
-    missing=$true
+    echo "Warning: missing dependency - Kallisto v0.44.0"
 fi
 
 if [ ! -x "$(command -v samtools)" ]; then
-    echo "Missing dependency: Samtools"
-    missing=$true
+    echo "Warning: missing dependency - Samtools"
 fi
 
 if [ ! -x "$(command -v bedtools)" ]; then
-    echo "Missing dependency: bedtools"
-    missing=$true
+    echo "Warning: missing dependency - bedtools"
 fi
 
 if [ ! -x "$(command -v pigz)" ]; then
-    echo "Missing dependency: pigz"
-    missing=$true
+    echo "Warning: missing dependency - pigz"
 fi
 
 if [ ! -x "$(command -v python3 -c "import numpy")" ]; then
-    echo "Missing dependency: python3 module NumPy"
-    missing=$true
+    echo "Warning: missing dependency - python3 module NumPy"
 fi
 
 if [ ! -x "$(command -v python3 -c "import pandas")" ]; then
-    echo "Missing dependency: python3 module pandas"
-    missing=$true
+    echo "Warning: missing dependency - python3 module pandas"
 fi
 
 if [ ! -x "$(command -v python3 -c "import Bio")" ]; then
-    echo "Missing dependency: python3 module Biopython"
-    missing=$true
-fi
-
-if [ $missing == $true ]; then
-    exit 1
+    echo "Warning: missing dependency - python3 module Biopython"
 fi
 
 #-----------------------------------------------------------------------------

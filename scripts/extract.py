@@ -249,7 +249,7 @@ if __name__ == '__main__':
              .format( 'paired' if args.paired else 'single'))
     hline()
     
-    with open('database/decoys_alts.p', 'rb') as file:
+    with open('dat/info/decoys_alts.p', 'rb') as file:
         alts = pickle.load(file)
     
     extract_reads(args.bam,
