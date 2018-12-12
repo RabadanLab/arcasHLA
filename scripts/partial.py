@@ -97,12 +97,12 @@ def process_partial_counts(count_file, eq_file, allele_idx, allele_lengths,
                 
     return eqs, total_count
 
-def filter_eqs(predictions, allele_idx, eq_idx, partial_alleles):
+def filter_eqs(complete_genotypes, allele_idx, eq_idx, partial_alleles):
     '''Filters compatibility classes if they contain partial alleles or
        at least one predicted complete allele.
     '''
     
-    all_predicted = {allele for alleles in predictions.values() 
+    all_predicted = {allele for alleles in complete_genotypes.values() 
                      for allele in alleles}
     
     wanted_indices = {index for index, alleles in allele_idx.items() 
@@ -112,7 +112,7 @@ def filter_eqs(predictions, allele_idx, eq_idx, partial_alleles):
     filtered_eqs = dict()
     for group, eq_list in eq_idx.items():
         filtered_eqs[group] = dict()
-        for gene in predictions:
+        for gene in complete_genotypes:
             if gene not in eq_list:
                 continue
 
@@ -141,7 +141,7 @@ def filter_eqs(predictions, allele_idx, eq_idx, partial_alleles):
 # Partial genotyping
 #-------------------------------------------------------------------------------
 
-def type_partial(eqs, gene, partial_exons, prediction, partial_alleles, 
+def type_partial(eqs, gene, partial_exons, complete_genotype, partial_alleles, 
                  population, prior, tolerance, max_iterations, 
                  drop_iterations, drop_threshold, zygosity_threshold):
     '''Types partial alleles.'''
@@ -174,7 +174,7 @@ def type_partial(eqs, gene, partial_exons, prediction, partial_alleles,
         
     if gene not in eqs[binding_region]:
         log.info(f'[genotype] No reads aligned to HLA-{gene} binding region') 
-        return prediction
+        return complete_genotype
         
     # Get group of possible partial alleles by performing transcript 
     # quantification on the binding region exons
@@ -193,7 +193,7 @@ def type_partial(eqs, gene, partial_exons, prediction, partial_alleles,
     # Map partial alleles to their possible exon combinations
     for idx in results:
         alleles = {process_allele(allele,3) for allele in allele_idx[idx]}
-        for allele in (alleles - set(prediction)) & partial_alleles:
+        for allele in (alleles - set(complete_genotype)) & partial_alleles:
             for group in eqs.keys():
                 if group[1:-1] in str(sorted(partial_exons[allele].keys())):
                     exon_groups[group].add(allele)
@@ -210,7 +210,7 @@ def type_partial(eqs, gene, partial_exons, prediction, partial_alleles,
             
         # Only look at partial alleles that have a different sequence for 
         # this combination of exons than the complete alleles
-        a1, a2 = prediction
+        a1, a2 = complete_genotype
         possible_alleles = {allele for allele in exon_groups[group] 
                             if allele_eq[group][allele] != allele_eq[group][a1] 
                             and allele_eq[group][allele] != allele_eq[group][a2]}
@@ -235,7 +235,7 @@ def type_partial(eqs, gene, partial_exons, prediction, partial_alleles,
 
         # Only consider pairs with partial alleles if they explain 
         # a greater percentage of reads
-        for a1, a2 in combinations(set(prediction) | possible_alleles, 2):
+        for a1, a2 in combinations(set(complete_genotype) | possible_alleles, 2):
             pair_count = get_pair_count(a1, a2)
             if pair_count/total_count > explained_percent:
                 explained_reads[(a1,a2)] = round(pair_count/total_count, 8)
@@ -256,18 +256,22 @@ def type_partial(eqs, gene, partial_exons, prediction, partial_alleles,
                     continue
                     
                 pair_prior[(a1,a2)] =  prior[process_allele(a1,2)][population] \
-                                      * prior[process_allele(a2,2)][population]
-                    
-            a1,a2 = sorted(pair_prior.items(), 
-                           key=lambda x:x[1], 
-                           reverse=True)[0][0]
+                                     * prior[process_allele(a2,2)][population]
+                                     
+            if pair_prior:    
+                a1,a2 = sorted(pair_prior.items(), 
+                               key=lambda x:x[1], 
+                               reverse=True)[0][0]
+            else:
+                a1,a2 = sorted(explained_reads.items(),
+                                              key= lambda x:x[1],
+                                              reverse=True)[0][0]
         else:
             a1,a2 = sorted(explained_reads.items(),
                                               key= lambda x:x[1],
                                               reverse=True)[0][0]
-            
         group = re.sub('[\'\[\]]','',group)
-        log.info('\t\texons {: <22}\t{a1: <28}\t{:.2f}%'
+        log.info('\t\texons {: <22}\t{: <28}\t{:.2f}%'
                  .format(group, ', '.join([a1,a2]), top_perc*100))
             
         overall.append([(a1,a2),top_perc])
@@ -277,7 +281,7 @@ def type_partial(eqs, gene, partial_exons, prediction, partial_alleles,
                       key=lambda x: (x[1],x[0][0],x[0][1]), 
                       reverse = True)[0][0]
     
-    return prediction
+    return complete_genotype
 
 #-------------------------------------------------------------------------------
 # Runs partial genotyping
@@ -343,7 +347,7 @@ def arg_check_threshold(parser, arg):
 
 if __name__ == '__main__':
     
-    with open('database/parameters.p', 'rb') as file:
+    with open('dat/info/parameters.p', 'rb') as file:
         genes, populations, databases = pickle.load(file)
     
     parser = argparse.ArgumentParser(prog='arcasHLA partial',
@@ -519,7 +523,7 @@ if __name__ == '__main__':
                                                          args.threads,
                                                          args.keep_files)
         
-        eq_idx, allele_eq, count = process_partial_counts(count_file,
+        eq_idx, count = process_partial_counts(count_file,
                                                  eq_file, 
                                                  allele_idx, 
                                                  lengths,
@@ -535,7 +539,7 @@ if __name__ == '__main__':
         log.info(f'[alignment] Loading previous alignment %s', args.file[0])
         
         with open(args.file[0],'rb') as file:
-            (commithash_alignment, eq_idx, allele_eq, paired, 
+            (commithash_alignment, eq_idx, paired, 
                 num, avg, std, count) = pickle.load(file)
             
         if commithash != commithash_alignment:
@@ -543,30 +547,30 @@ if __name__ == '__main__':
                      'different than the one in the database')
         
     with open(args.genotype,'r') as file:
-        predictions = json.load(file)
+        complete_genotypes = json.load(file)
     
     
     log.info('[alignment] Processed {:.0f} reads, {:.0f} '.format(num, count) +
              'pseudoaligned to HLA reference')
     
-    genes = set(args.genes) & set(predictions.keys())
+    genes = set(args.genes) & set(complete_genotypes.keys())
     
-    eq_idx, allele_eq = filter_eqs(predictions, allele_idx, eq_idx, partial_alleles)
+    eq_idx, allele_eq = filter_eqs(complete_genotypes, allele_idx, eq_idx, partial_alleles)
     
     partial_results = dict()
 
     for gene in sorted(genes):
         hline()
         log.info(f'[genotype] Partial genotyping HLA-{gene}')
-        prediction = predictions[gene]
-        if len(prediction) == 1:
-            prediction.append(prediction[0])
+        complete_genotype = complete_genotypes[gene]
+        if len(complete_genotype) == 1:
+            complete_genotype.append(complete_genotype[0])
                                      
                                         
         genotype = type_partial(eq_idx, 
                                 gene,
                                 partial_exons,
-                                prediction, 
+                                complete_genotype, 
                                 partial_alleles, 
                                 args.population, 
                                 prior, 

@@ -16,22 +16,45 @@ arcasHLA requires the following Python modules:
 - Pandas
 
 ### Test ###
+In order to test arcasHLA partial typing, we need to roll back the reference to an earlier version. First, fetch IMGT/HLA database version 3.24.0:
+```
+./arcasHLA reference --version 3.24.0
+```
 Extract reads:
 ```
-./arcasHLA extract test/test.bam -o test/output --paired -v
+./arcasHLA extract test/test.bam -o test/output --paired -t 8 -v
 ```
-Genotype (this will set up the reference if running for the first time):
+Complete typing:
 ```
-./arcasHLA genotype test/output/test.extracted.1.fq.gz test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1 -o test/output -v
+./arcasHLA genotype test/output/test.extracted.1.fq.gz test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1,DRB1 -o test/output -t 8 -v
 ```
-Expected output in `test.genotype.json`:
+Expected output in `test/output/test.genotype.json`:
 ```
 {"A": ["A*01:01:01", "A*03:01:01"], 
  "B": ["B*39:01:01", "B*07:02:01"], 
  "C": ["C*08:01:01", "C*01:02:01"], 
- "DPB1": ["DPB1*15:01:01", "DPB1*02:01:02"], 
- "DQA1": ["DQA1*05:03:01", "DQA1*01:01:01"], 
- "DQB1": ["DQB1*06:09:01", "DQB1*02:02:01"]}
+ "DPB1": ["DPB1*14:01:01", "DPB1*02:01:02"], 
+ "DQA1": ["DQA1*02:01:01", "DQA1*05:03"], 
+ "DQB1": ["DQB1*02:02:01", "DQB1*06:09:01"], 
+ "DRB1": ["DRB1*10:01:01", "DRB1*14:02:01"]}
+```
+Partial typing:
+```
+./arcasHLA partial test/output/test.extracted.1.fq.gz test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1,DRB1 -G test/output/test.genotype.json -o test/output -t 8 -v
+```
+Expected output in `test/output/test.partial_genotype.json`:
+```
+{"A": ["A*01:01:01", "A*03:01:01"], 
+ "B": ["B*07:02:01", "B*39:39:01"],
+ "C": ["C*08:01:01", "C*01:02:01"], 
+ "DPB1": ["DPB1*14:01:01", "DPB1*02:01:02"], 
+ "DQA1": ["DQA1*02:01:01", "DQA1*05:03"], 
+ "DQB1": ["DQB1*06:04:01", "DQB1*02:02:01"],
+ "DRB1": ["DRB1*03:02:01", "DRB1*14:02:01"]}
+```
+Before further usage, remember to update to the current version.
+```
+./arcasHLA reference --update
 ```
 
 ### Usage ###

@@ -89,8 +89,11 @@ def fetch_hla_dat():
     
 def checkout_version(commithash):
     '''Checks out a specific IMGTHLA github version given a commithash.'''
+    
+    if not isfile(hla_dat):
+        fetch_hla_dat()
 
-    command = ['git', '-C', IMGTHLA, 'checkout']
+    command = ['git', '-C', IMGTHLA, 'checkout', commithash]
     run_command(command,'[reference] checking out IMGT/HLA:')
         
 def hla_dat_version(print_version = False):
@@ -460,14 +463,13 @@ if __name__ == '__main__':
 
     if args.update:
         log.info('[reference] Updating HLA reference')
-        fetch_hla_dat()
+        checkout_version('origin')
         build_fasta()
         
     elif args.rebuild:
         build_fasta()
         
     elif args.version:
-        check_ref()
         if args.version not in versions:
             sys.exit('[reference] Error: invalid version.')
         checkout_version(versions[args.version])
