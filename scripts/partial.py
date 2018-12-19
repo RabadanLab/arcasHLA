@@ -50,9 +50,11 @@ __date__        = 'November 2018'
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
-partial_p       = 'dat/ref/hla_partial.p'
-partial_idx     = 'dat/ref/hla_partial.idx'
-hla_freq        = 'dat/info/hla_freq.tsv'
+rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
+
+partial_p       = rootDir + 'dat/ref/hla_partial.p'
+partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
+hla_freq        = rootDir + 'dat/info/hla_freq.tsv'
 
 #-------------------------------------------------------------------------------
 # Process transcript assembly output
@@ -347,7 +349,7 @@ def arg_check_threshold(parser, arg):
 
 if __name__ == '__main__':
     
-    with open('dat/info/parameters.p', 'rb') as file:
+    with open(rootDir + 'dat/info/parameters.p', 'rb') as file:
         genes, populations, databases = pickle.load(file)
     
     parser = argparse.ArgumentParser(prog='arcasHLA partial',

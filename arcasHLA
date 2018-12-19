@@ -48,25 +48,27 @@ fi
 #   Tools
 #-----------------------------------------------------------------------------
 
+ARCASHLA_ROOT_DIR=$(realpath $(dirname $0))
+
 if [ "$1" == "extract" ]; then
 
-    python3 ./scripts/extract.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/extract.py ${@:2}
 
 elif [ "$1" == "genotype" ]; then
 
-    python3 ./scripts/genotype.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/genotype.py ${@:2}
 
 elif [ "$1" == "merge" ]; then
 
-    python3 ./scripts/merge.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/merge.py ${@:2}
 
 elif [ "$1" == "reference" ]; then
 
-    python3 ./scripts/reference.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/reference.py ${@:2}
 
 elif [ "$1" == "partial" ]; then
 
-    python3 ./scripts/partial.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/partial.py ${@:2}
     
 #-----------------------------------------------------------------------------
 #   Usage

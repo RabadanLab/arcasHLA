@@ -219,6 +219,8 @@ if __name__ == '__main__':
     
     sample = os.path.basename(args.bam).split('.')[0]
     
+    datDir = os.path.dirname(os.path.realpath(__file__)) + '/../dat/'
+    
     if args.log:
         log_file = args.log
     else:
@@ -249,7 +251,7 @@ if __name__ == '__main__':
              .format( 'paired' if args.paired else 'single'))
     hline()
     
-    with open('dat/info/decoys_alts.p', 'rb') as file:
+    with open(datDir + '/info/decoys_alts.p', 'rb') as file:
         alts = pickle.load(file)
     
     extract_reads(args.bam,
