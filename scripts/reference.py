@@ -54,7 +54,7 @@ __date__        = 'November 2018'
 rootDir = dirname(realpath(__file__)) + '/../'
 
 IMGTHLA         = rootDir + 'dat/IMGTHLA/'
-IMGTHLA_git     = rootDir + 'https://github.com/ANHIG/IMGTHLA.git'
+IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
 hla_dat         = rootDir + 'dat/IMGTHLA/hla.dat'
 hla_fa          = rootDir + 'dat/ref/hla.fasta'
 partial_fa      = rootDir + 'dat/ref/hla_partial.fasta'
