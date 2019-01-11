@@ -13,6 +13,7 @@ Make sure the following programs are in your `PATH`:
 arcasHLA requires the following Python modules:
 - [Biopython](https://biopython.org/wiki/Download)
 - NumPy
+- SciPy
 - Pandas
 
 ### Test ###
