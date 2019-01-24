@@ -68,6 +68,14 @@ elif [ "$1" == "partial" ]; then
 
     python3 ./scripts/partial.py ${@:2}
     
+elif [ "$1" == "quant_ref" ]; then
+
+    python3 ./scripts/quant_ref.py ${@:2}
+    
+elif [ "$1" == "quant" ]; then
+
+    python3 ./scripts/quant.py ${@:2}
+    
 #-----------------------------------------------------------------------------
 #   Usage
 #-----------------------------------------------------------------------------

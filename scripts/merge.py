@@ -25,6 +25,7 @@
 import os
 import json
 import argparse
+import pandas as pd
 
 from argparse import RawTextHelpFormatter
 
@@ -37,13 +38,20 @@ def get_paths(indir):
     partial_files = []
     genotype_files = []
     
+    log_files = []
+    quant_files = []
+    
     for file in os.listdir(indir):
         if file.endswith('.partial_genotype.json'):
             partial_files.append(file)
         elif file.endswith('.genotype.json'):
             genotype_files.append(file)
+        elif file.endswith('.quant.json'):
+            quant_files.append(file)
+        elif file.endswith('.genotype.log'):
+            log_files.append(file)
             
-    return genotype_files, partial_files 
+    return genotype_files, partial_files, log_files, quant_files
     
 def process_json(json_files, indir, outdir, run, suffix):
     '''Merge genotype.json files.'''
@@ -61,6 +69,54 @@ def process_json(json_files, indir, outdir, run, suffix):
             
     with open(''.join(file_out), 'w') as file:
         json.dump(genotypes, file)
+        
+def process_count(count_files, indir, outdir, run, suffix):
+    file_out = [outdir]
+    if run: file_out.extend([run,'.'])
+    file_out.append(suffix)
+    file_out = ''.join(file_out)
+    
+    all_counts = []
+    for file in count_files:
+        sample = file.split('.')[0]
+        file_path = indir + file
+
+        with open(file_path, 'r') as file:
+            lines = file.read()
+
+        lines = lines.split('-'*80)[2].split('\n')
+        counts = {'Sample':sample}
+        for line in lines:
+            if line.startswith('[alignment] Processed '):
+                _,_,counts['total_count'],_,counts['aligned_count'],_,_,_,_ = line.split()
+            elif line.endswith(' reads mapped to a single HLA gene'):
+                counts['single_count'] = line.split()[1]
+            elif line.startswith('\t\tHLA-'):
+                line = line.split()
+                gene = line[0].split('-')[1]
+                counts[gene + '_read_count'] = line[2]
+        all_counts.append(counts)
+            
+    pd.DataFrame(all_counts).set_index('Sample').to_csv(file_out, sep = '\t')
+        
+def process_quant(json_files, indir, outdir, run, suffix):
+    file_out = [outdir]
+    if run: file_out.extend([run,'.'])
+    file_out.append(suffix)
+    file_out = ''.join(file_out)
+    
+    all_results = []
+    for file in json_files:
+        sample = file.split('.')[0]
+        file_path = indir + file
+
+        with open(file_path,'r') as file:
+            results = json.load(file)
+            results['Sample'] = sample
+            
+            all_results.append(results)
+            
+    pd.DataFrame(all_results).set_index('Sample').to_csv(file_out, sep = '\t')
     
 
 if __name__ == '__main__':
@@ -105,7 +161,7 @@ if __name__ == '__main__':
     
     indir, outdir = [check_path(path) for path in [args.indir, args.outdir]]
     
-    genotype_files, partial_files = get_paths(indir)
+    genotype_files, partial_files, count_files, quant_files = get_paths(indir)
     
     if genotype_files:
         process_json(genotype_files, 
@@ -120,5 +176,17 @@ if __name__ == '__main__':
                      outdir,  
                      args.run, 
                      'partial_genotypes.json')
-        
+    if count_files:
+        process_count(count_files,
+                     indir,
+                     outdir,
+                     args.run,
+                     'counts.tsv')
+    
+    if quant_files:
+        process_quant(quant_files, 
+                     indir, 
+                     outdir,  
+                     args.run, 
+                     'quant.tsv')
 #-------------------------------------------------------------------------------
