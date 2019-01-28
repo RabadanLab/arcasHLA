@@ -2,6 +2,45 @@
 
 arcasHLA performs high resolution genotyping for HLA class I and class II genes from RNA sequencing, supporting both paired and single-end samples.
 
+# arcasHLA quantification #
+
+## Setup ##
+```
+git clone https://github.com/roseorenbuch/arcasHLA.git
+cd arcasHLA
+wget https://www.dropbox.com/s/555ro233smx7abl/quant_ref.zip
+unzip quant_ref.zip
+```
+
+## Individual reference ##
+Use `--chr6` flag to only include chromosome 6 transcripts. Genotype should be 2 fields in resolution, comma-separated, at most 2 alleles per HLA gene.
+
+```
+./arcasHLA quant_ref subject_name genotype
+```
+
+Example:
+```
+./arcasHLA quant_ref --chr6 -o ~/ref Pt23 A*03:01,A*02:01,B*15:01,B*18:01,C*07:01,C*03:04
+```
+
+## Quantification ##
+```
+./arcasHLA quant --ref /path/to/ref/sample FASTQ
+```
+
+Example:
+```
+./arcasHLA quant --ref ~/ref/Pt23 -t 8 -o /Volumes/quant/ /Volumes/fastq/Pt23_pre.1.fq.gz /Volumes/f
+astq/Pt23_pre.2.fq.gz
+```
+## Merge ##
+Merge will create a tsv file containing all the quantification results ("run.quant.tsv").
+```
+./arcasHLA merge -i /Volumes/quant/ --run test -o ./
+```
+Merge will also now create a tsv file containing all gene counts when supplied a folder with ".genotype.log" files.
+
 ### Dependencies ###
 Make sure the following programs are in your `PATH`:
 - [Samtools](http://www.htslib.org/)
