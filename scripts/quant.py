@@ -161,6 +161,8 @@ if __name__ == '__main__':
                         action = 'count',
                         default=False)
 
+    parser.add_argument('--pseudo', action = 'count', default=False)
+
     args = parser.parse_args()
     
     paired = False
@@ -186,6 +188,17 @@ if __name__ == '__main__':
     indv_p = args.ref + '.p'
     indv_abundance =  outdir + sample + '.quant.tsv'
     indv_results = outdir + sample + '.quant.json'
+
+    if args.pseudo:
+        command = ['kallisto pseudo', '-i', indv_idx, '-o', temp, '-t', args.threads]
+        if len(args.file) == 1:
+            command.extend('--single -l', str(avg), '-s', str(std))
+        command.extend(args.file)
+        run_command(command)
+        run_command(['mv',temp + 'pseudoalignments.ec', outdir + sample + '.classes.tsv'])
+        run_command(['mv', temp + 'pseudoalignments.tsv', outdir + sample + '.counts.tsv'])
+        run_command(['rm -rf', temp])
+        sys.exit()
     
     
     command = ['kallisto quant', '-i', indv_idx, '-o', temp, '-t', args.threads]
@@ -200,7 +213,7 @@ if __name__ == '__main__':
     
     
     with open(indv_p, 'rb') as file:
-        id_to_gene,allele_idx,lengths = pickle.load(file)
+        genes,hla_idx,allele_idx,lengths = pickle.load(file)
     
     idx_allele = defaultdict(set)
     for idx, gene in allele_idx.items():
@@ -208,7 +221,7 @@ if __name__ == '__main__':
 
     kallisto_results = pd.read_csv(indv_abundance, sep = '\t')
 
-    genes = set(id_to_gene.values())
+    genes = set(genes.keys())
     
     idx_allele = defaultdict(set)
     for idx, gene in allele_idx.items():

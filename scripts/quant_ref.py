@@ -176,6 +176,7 @@ if __name__ == '__main__':
 
     dummy_HLA_dict = SeqIO.to_dict(SeqIO.parse(dummy_HLA, 'fasta'))
     
+    
     if args.chr6:
         transcriptome = list(SeqIO.parse(GRCh38_chr6, 'fasta'))
     else:
@@ -184,9 +185,13 @@ if __name__ == '__main__':
     with open(HLA_transcripts,'r') as file:
         HLA_transcripts = json.load(file)
     
-    for gene in set(HLA_transcripts) - set(args.genotype.keys()):
+    genes = {allele_id[:-1] for allele_id in args.genotype.keys()}
+    for gene in set(HLA_transcripts) - genes:
         for transcript in HLA_transcripts[gene]:
             transcriptome.append(dummy_HLA_dict[transcript])
+            
+    with open('dat/ref/allele_groups.p','rb') as file:
+        groups = pickle.load(file)
             
 
     with open(cDNA,'rb') as file:
@@ -203,16 +208,18 @@ if __name__ == '__main__':
     indv_records = []
 
     allele_idx = dict()
-    lengths = defaultdict(list)
-    id_to_gene = dict()
+    lengths = dict()
+    genes = defaultdict(list)
+    hla_idx = defaultdict(list)
 
     idx = 0
     for allele_id, allele in genotype.items():
         gene = get_gene(allele)
         for seq in cDNA[allele]:
-            id_to_gene[allele_id] = gene
+            hla_idx[allele_id].append(str(idx))
+            genes[gene].append(allele_id)
             allele_idx[str(idx)] = allele_id
-            lengths[allele_id].append(len(seq))
+            lengths[str(idx)] = len(seq)
 
             record = SeqRecord(Seq(seq),
                                id=str(idx),
@@ -223,7 +230,7 @@ if __name__ == '__main__':
             
     for transcript in transcriptome:
         allele_idx[str(idx)] = transcript.id
-        lengths[transcript.id].append(len(seq))
+        lengths[str(idx)] = len(seq)
 
         record = SeqRecord(transcript.seq,
                            id=str(idx),
@@ -235,7 +242,7 @@ if __name__ == '__main__':
     SeqIO.write(indv_records, indv_fasta, 'fasta')
 
     with open(indv_p, 'wb') as file:
-        pickle.dump([id_to_gene,allele_idx,lengths], file)
+        pickle.dump([genes,hla_idx,allele_idx,lengths], file)
 
     run_command(['kallisto', 'index','-i', indv_idx, indv_fasta])
 
