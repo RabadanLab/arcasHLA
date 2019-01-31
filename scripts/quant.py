@@ -504,32 +504,50 @@ if __name__ == '__main__':
         
     command.extend(args.file)
         
-    run_command(command)
+    output = run_command(command)
+    
+    n_reads = int(''.join(str(output.stderr).split('\\n')[10].split()[2].split(',')))
+    aligned_reads = int(''.join(str(output.stderr).split('\\n')[10].split()[4].split(',')))
+    
     run_command(['mv',temp + '/abundance.tsv',indv_abundance])
     
 
     kallisto_results = pd.read_csv(indv_abundance, sep = '\t')
 
-    genes = set(genes.keys())
-    
     idx_allele = defaultdict(set)
+    hla_indices = set()
     for idx, gene in allele_idx.items():
         if gene[:-1] in genes:
             idx_allele[gene].add(idx)
+            hla_indices.add(int(idx))
 
-    results = defaultdict(float)
+    lengths = defaultdict(float)
+    counts = defaultdict(float)
+    tpm = defaultdict(float)
     for gene, indices in idx_allele.items():
         for idx in indices:
-            results[gene + '_count'] += kallisto_results.loc[int(idx)]['est_counts']
-            results[gene + '_tpm'] += kallisto_results.loc[int(idx)]['tpm']
-    for gene in genes:
-        c1 = results[gene + '1_count']
-        c2 = results[gene + '2_count']
+            counts[gene] += kallisto_results.loc[int(idx)]['est_counts']
+            lengths[gene] += kallisto_results.loc[int(idx)]['length']
+            tpm[gene] += kallisto_results.loc[int(idx)]['tpm']
 
-        if c1 == 0 or c2 == 0:
-            results[gene + '_ratio'] = 0.0
-        else:
-            results[gene + '_ratio'] = min(c1/c2, c2/c1)
+    scale = n_reads/1e6
+    rpm = {idx:count/scale for idx, count in counts.items()}
+    rpkm = {idx: idx_rpm/(lengths[idx]/1000) for idx, idx_rpm in rpm.items()}
+
+    results = defaultdict(float)
+    results['total_count'] = n_reads
+    results['aligned_reads'] = aligned_reads
+
+    for gene, allele_ids in genes.items():
+        for allele_id in set(allele_ids):
+            results[allele_id + '_count'] = counts[allele_id]
+            results[allele_id + '_rpkm'] = rpkm[allele_id]
+            results[allele_id + '_tpm'] = tpm[allele_id]
+    for gene, allele_ids in genes.items():
+        for allele_id in set(allele_ids):
+            a1_a2 = results[gene + '1_count'] / results[gene + '2_count'] 
+            a2_a1 = results[gene + '2_count'] / results[gene + '1_count'] 
+            results[gene + '_ratio'] = min(a1_a2, a2_a1)
             
     with open(indv_results, 'w') as file:
         json.dump(results, file)
