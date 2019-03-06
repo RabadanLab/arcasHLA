@@ -51,10 +51,12 @@ __date__        = 'November 2018'
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
-hla_p      = 'dat/ref/hla.p'
-hla_idx    = 'dat/ref/hla.idx'
-hla_freq   = 'dat/info/hla_freq.tsv'
-parameters = 'dat/info/parameters.p'
+rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
+
+hla_p      = rootDir + 'dat/ref/hla.p'
+hla_idx    = rootDir + 'dat/ref/hla.idx'
+hla_freq   = rootDir + 'dat/info/hla_freq.tsv'
+parameters = rootDir + 'dat/info/parameters.p'
 
 #-----------------------------------------------------------------------------
 # Process and align FASTQ input
@@ -810,7 +812,7 @@ if __name__ == '__main__':
     prior = prior.set_index('allele').to_dict('index')
        
     # checks if HLA reference exists
-    check_path('dat/ref')
+    check_path(rootDir + 'dat/ref')
     check_ref()
     
     # loads reference information

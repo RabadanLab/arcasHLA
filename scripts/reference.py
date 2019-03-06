@@ -30,7 +30,7 @@ import argparse
 import logging as log
 
 from argparse import RawTextHelpFormatter
-from os.path import isfile, isdir
+from os.path import isfile, isdir, dirname, realpath
 from subprocess import PIPE, run
 
 from textwrap import wrap
@@ -51,16 +51,18 @@ __date__        = 'November 2018'
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
-IMGTHLA         = 'dat/IMGTHLA/'
+rootDir = dirname(realpath(__file__)) + '/../'
+
+IMGTHLA         = rootDir + 'dat/IMGTHLA/'
 IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
-hla_dat         = 'dat/IMGTHLA/hla.dat'
-hla_fa          = 'dat/ref/hla.fasta'
-partial_fa      = 'dat/ref/hla_partial.fasta'
-hla_p           = 'dat/ref/hla.p'
-partial_p       = 'dat/ref/hla_partial.p'
-hla_idx         = 'dat/ref/hla.idx'
-partial_idx     = 'dat/ref/hla_partial.idx'
-parameters      = 'dat/info/parameters.p'
+hla_dat         = rootDir + 'dat/IMGTHLA/hla.dat'
+hla_fa          = rootDir + 'dat/ref/hla.fasta'
+partial_fa      = rootDir + 'dat/ref/hla_partial.fasta'
+hla_p           = rootDir + 'dat/ref/hla.p'
+partial_p       = rootDir + 'dat/ref/hla_partial.p'
+hla_idx         = rootDir + 'dat/ref/hla.idx'
+partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
+parameters      = rootDir + 'dat/info/parameters.p'
 
 #-------------------------------------------------------------------------------
 #   Fetch and process IMGTHLA database
@@ -459,7 +461,7 @@ if __name__ == '__main__':
     log.info('')
     hline()
     
-    check_path('dat/ref')
+    check_path(rootDir + 'dat/ref')
 
     if args.update:
         log.info('[reference] Updating HLA reference')
