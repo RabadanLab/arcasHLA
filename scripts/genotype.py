@@ -140,7 +140,7 @@ def process_counts(count_file, eq_file, gene_list, allele_idx,
     log.info('[alignment] processing pseudoalignment')
     # Process count information
     counts = dict()
-    with open(count_file, 'r') as file:
+    with open(count_file, 'r', encoding='UTF-8') as file:
         for line in file.read().splitlines():
             eq, count = line.split('\t')
             counts[eq] = float(count)
@@ -148,7 +148,7 @@ def process_counts(count_file, eq_file, gene_list, allele_idx,
     
     # Process compatibility classes
     eqs = dict()
-    with open(eq_file, 'r') as file:
+    with open(eq_file, 'r', encoding='UTF-8') as file:
         for line in file.read().splitlines():
             eq, indices = line.split('\t')
             eqs[eq] = indices.split(',')

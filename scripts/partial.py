@@ -67,14 +67,14 @@ def process_partial_counts(count_file, eq_file, allele_idx, allele_lengths,
     log.info('[alignment] Processing pseudoalignment')
     total_count = 0
     counts_index = dict()
-    with open(count_file,'r') as file:
+    with open(count_file,'r', encoding='UTF-8') as file:
         for line in file.read().splitlines():
             eq, count = line.split('\t')
             counts_index[eq] = float(count)
             total_count += float(count)
 
     eq_index = dict()
-    with open(eq_file,'r') as file:
+    with open(eq_file,'r', encoding='UTF-8') as file:
         for line in file.read().splitlines():
             eq, indices = line.split('\t')
             eq_index[eq] = indices.split(',')
