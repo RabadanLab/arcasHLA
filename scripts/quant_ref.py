@@ -27,6 +27,7 @@
 #-------------------------------------------------------------------------------
 
 cDNA            = 'dat/ref/cDNA.p'
+cDNA_single     = 'dat/ref/cDNA.single.p'
 GRCh38_chr6     = 'dat/ref/GRCh38.chr6.noHLA.fasta'
 GRCh38          = 'dat/ref/GRCh38.all.noHLA.fasta'
 HLA_transcripts = 'dat/ref/hla_transcripts.json'
@@ -140,6 +141,15 @@ if __name__ == '__main__':
                         help='restrict transcriptome to chr 6\n  default: False\n\n',
                         default=False)
 
+    parser.add_argument('--group', 
+                        action='count',
+                        help='use allele binding groups\n  default: False\n\n',
+                        default=False)
+    
+    parser.add_argument('--single', 
+                        action='count',
+                        help='use only one sequence per allele\n  default: False\n\n',
+                        default=False)
     
     parser.add_argument('-o',
                         '--outdir',
@@ -174,6 +184,7 @@ if __name__ == '__main__':
         
     temp, outdir = [check_path(path) for path in [args.temp, args.outdir]]
 
+ 
     dummy_HLA_dict = SeqIO.to_dict(SeqIO.parse(dummy_HLA, 'fasta'))
     
     
@@ -189,13 +200,16 @@ if __name__ == '__main__':
     for gene in set(HLA_transcripts) - genes:
         for transcript in HLA_transcripts[gene]:
             transcriptome.append(dummy_HLA_dict[transcript])
-            
+     
     with open('dat/ref/allele_groups.p','rb') as file:
         groups = pickle.load(file)
             
 
     with open(cDNA,'rb') as file:
         cDNA = pickle.load(file)
+        
+    with open(cDNA_single,'rb') as file:
+        cDNA_single = pickle.load(file)
         
     ID = args.individual
 
@@ -215,7 +229,15 @@ if __name__ == '__main__':
     idx = 0
     for allele_id, allele in genotype.items():
         gene = get_gene(allele)
-        for seq in cDNA[allele]:
+        
+        if args.single:
+            sequences = [cDNA_single[allele]]
+        elif args.group:
+            sequences = [seq for a in groups[allele] for seq in cDNA[a]]
+        else:
+            sequences = [seq for seq in cDNA[allele]]
+            
+        for seq in sequences:
             hla_idx[allele_id].append(str(idx))
             genes[gene].append(allele_id)
             allele_idx[str(idx)] = allele_id
@@ -227,7 +249,7 @@ if __name__ == '__main__':
 
             indv_records.append(record)
             idx += 1
-            
+     
     for transcript in transcriptome:
         allele_idx[str(idx)] = transcript.id
         lengths[str(idx)] = len(seq)
@@ -238,6 +260,7 @@ if __name__ == '__main__':
 
         indv_records.append(record)
         idx += 1
+
 
     SeqIO.write(indv_records, indv_fasta, 'fasta')
 
