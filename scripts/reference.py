@@ -124,7 +124,7 @@ def process_hla_dat():
     complete_2fields = set()
     partial_alleles = set()
 
-    with open(hla_dat, 'r') as file:
+    with open(hla_dat, 'r', encoding='UTF-8') as file:
         lines = file.read().splitlines()
         
     if len(lines) < 10:
