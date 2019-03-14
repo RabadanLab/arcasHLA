@@ -41,11 +41,10 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from arcas_utilities import (process_allele, run_command, get_gene, 
-                             hline, check_path)
+from arcas_utilities import *
 
-__version__     = '1.0'
-__date__        = 'November 2018'
+__version__     = '0.1'
+__date__        = '2019-03-14'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -106,7 +105,7 @@ def hla_dat_version(print_version = False):
     if print_version:
         log.info(commit)
     
-    return commit
+    return commit[:-1]
 
 def process_hla_dat():
     '''Processes IMGTHLA database, returning HLA sequences, exon locations, 
@@ -125,8 +124,11 @@ def process_hla_dat():
     complete_2fields = set()
     partial_alleles = set()
 
-    with open(hla_dat, 'r', encoding='UTF-8') as file:
+    with open(hla_dat, 'r') as file:
         lines = file.read().splitlines()
+        
+    if len(lines) < 10:
+        sys.exit('[reference] Error: dat/IMGTHLA/hla.dat empty or corrupted.')
 
     for line in lines:
         # Denotes end of sequence, add allele to database

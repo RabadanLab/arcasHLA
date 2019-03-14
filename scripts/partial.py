@@ -38,13 +38,13 @@ from collections import Counter, defaultdict
 from textwrap import wrap
 from datetime import date
 
-from reference import check_ref, get_exon_combinations
-from arcas_utilities import (process_allele, check_path, remove_files, 
-                             run_command, hline)
-from genotype import pseudoalign, expectation_maximization
+from reference import check_ref
+from arcas_utilities import *
+from align import *
+from genotype import expectation_maximization
 
-__version__     = '1.0'
-__date__        = 'November 2018'
+__version__     = '0.1'
+__date__        = '2019-03-14'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -59,45 +59,6 @@ hla_freq        = rootDir + 'dat/info/hla_freq.tsv'
 #-------------------------------------------------------------------------------
 # Process transcript assembly output
 #-------------------------------------------------------------------------------
-
-def process_partial_counts(count_file, eq_file, allele_idx, allele_lengths, 
-                           exon_idx, exon_combos, keep_files):
-    '''Processes pseudoalignment output, returning compatibility classes.'''
-    
-    log.info('[alignment] Processing pseudoalignment')
-    total_count = 0
-    counts_index = dict()
-    with open(count_file,'r', encoding='UTF-8') as file:
-        for line in file.read().splitlines():
-            eq, count = line.split('\t')
-            counts_index[eq] = float(count)
-            total_count += float(count)
-
-    eq_index = dict()
-    with open(eq_file,'r', encoding='UTF-8') as file:
-        for line in file.read().splitlines():
-            eq, indices = line.split('\t')
-            eq_index[eq] = indices.split(',')
-
-    eqs = {str(i):defaultdict(list) for i in exon_combos}
-
-    for eq, indices in eq_index.items():
-        if [index for index in indices if not allele_idx[index]]:
-            continue
-
-        genes = list({allele.split('*')[0] for index in indices 
-                      for allele in allele_idx[index]})
-                      
-        exons = list({exon_idx[index] for index in indices})
-        if len(genes) == 1 and counts_index[eq] > 0:
-            gene = genes[0]
-            for exon in exons:
-                exon_indices = list({index for index in indices 
-                                      if exon_idx[index] == exon})
-                                     
-                eqs[exon][gene].append((exon_indices,counts_index[eq]))
-                
-    return eqs, total_count
 
 def filter_eqs(complete_genotypes, allele_idx, eq_idx, partial_alleles):
     '''Filters compatibility classes if they contain partial alleles or
@@ -290,10 +251,11 @@ def type_partial(eqs, gene, partial_exons, complete_genotype, partial_alleles,
 #-------------------------------------------------------------------------------
 
 def arg_check_files(parser, arg):
+    accepted_formats = ('alignment.p','fq.gz','fastq.gz','fq','fastq')
     for file in arg.split():
         if not os.path.isfile(file):
             parser.error('The file %s does not exist.' %file)
-        elif not (file.endswith('alignment.p') or file.endswith('.fq.gz')):
+        elif not file.lower().endswith(accepted_formats):
             parser.error('The format of %s is invalid.' %file)
         return arg
     
@@ -466,7 +428,9 @@ if __name__ == '__main__':
         sys.exit('[genotype] Error: FASTQ or partial_alignment.p file required')
     
     sample = os.path.basename(args.file[0]).split('.')[0]
-    temp, outdir = [check_path(path) for path in [args.temp, args.outdir]]
+    
+    outdir = check_path(args.outdir)
+    temp = create_temp(args.temp)
     
     if args.log:
         log_file = args.log
@@ -495,6 +459,7 @@ if __name__ == '__main__':
     log.info(f'[log] Sample: %s', sample)
     log.info(f'[log] Input file(s): %s', ', '.join(args.file))
         
+    
     prior = pd.read_csv(hla_freq, delimiter='\t')
     prior = prior.set_index('allele').to_dict('index')
        
@@ -503,61 +468,29 @@ if __name__ == '__main__':
     
     # loads reference information
     with open(partial_p, 'rb') as file:
+        reference_info = pickle.load(file)
         (commithash, (gene_set, allele_idx, exon_idx, 
-            lengths, partial_exons, partial_alleles)) = pickle.load(file)
+            lengths, partial_exons, partial_alleles)) = reference_info
         
     log.info(f'[log] Reference: %s', commithash)
-    hline()
-    
-    exon_combos = get_exon_combinations()   
+    hline()  
           
     # runs transcript assembly if intermediate json not provided
-    reference = partial_idx
-    if not args.file[0].endswith('.partial_alignment.p'):
-        paired = True if len(args.file) == 2 else False
-        
-        count_file, eq_file, num, avg, std = pseudoalign(args.file,
-                                                         sample,
-                                                         paired,
-                                                         reference,
-                                                         outdir, 
-                                                         temp,
-                                                         args.threads,
-                                                         args.keep_files)
-        
-        eq_idx, count = process_partial_counts(count_file,
-                                                 eq_file, 
-                                                 allele_idx, 
-                                                 lengths,
-                                                 exon_idx,
-                                                 exon_combos,
-                                                 args.keep_files)
-
-        with open(''.join([outdir,sample,'.partial_alignment.p']),'wb') as file:
-            output = [commithash, eq_idx, paired, num, avg, std, count]
-            pickle.dump(output, file)
-            
+    if args.file[0].endswith('.partial_alignment.p'):
+        alignment_info = load_alignment(args.file[0], commithash, True)
     else:
-        log.info(f'[alignment] Loading previous alignment %s', args.file[0])
-        
-        with open(args.file[0],'rb') as file:
-            (commithash_alignment, eq_idx, paired, 
-                num, avg, std, count) = pickle.load(file)
-            
-        if commithash != commithash_alignment:
-            sys.exit('[genotype] Error: reference used for alignment ' +
-                     'different than the one in the database')
+        alignment_info = get_alignment(args.file, sample, partial_idx,
+                                       reference_info, outdir, temp, 
+                                       args.threads, True)
+    commithash, eq_idx, _, paired, align_stats, _ = alignment_info
         
     with open(args.genotype,'r') as file:
         complete_genotypes = json.load(file)
     
-    
-    log.info('[alignment] Processed {:.0f} reads, {:.0f} '.format(num, count) +
-             'pseudoaligned to HLA reference')
-    
     genes = set(args.genes) & set(complete_genotypes.keys())
     
-    eq_idx, allele_eq = filter_eqs(complete_genotypes, allele_idx, eq_idx, partial_alleles)
+    eq_idx, allele_eq = filter_eqs(complete_genotypes, allele_idx, 
+                                   eq_idx, partial_alleles)
     
     partial_results = dict()
 
@@ -591,6 +524,8 @@ if __name__ == '__main__':
             
     with open(''.join([outdir, sample,'.partial_genotype.json']),'w') as file:
             json.dump(partial_results, file)
+            
+    remove_files(temp, args.keep_files)
             
     hline()
     log.info('')

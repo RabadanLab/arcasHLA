@@ -41,11 +41,11 @@ from collections import Counter, defaultdict
 from itertools import combinations
 
 from reference import check_ref
-from arcas_utilities import (process_allele, check_path, remove_files, 
-                            run_command, get_gene, hline)
+from arcas_utilities import *
+from align import *
 
-__version__     = '1.0'
-__date__        = 'November 2018'
+__version__     = '0.1'
+__date__        = '2019-03-14'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -58,159 +58,6 @@ hla_idx    = rootDir + 'dat/ref/hla.idx'
 hla_freq   = rootDir + 'dat/info/hla_freq.tsv'
 parameters = rootDir + 'dat/info/parameters.p'
 
-#-----------------------------------------------------------------------------
-# Process and align FASTQ input
-#-----------------------------------------------------------------------------
-
-def analyze_reads(fqs, paired, reads_file, keep_files):
-    '''Analyzes read length for single-end sampled, required by Kallisto.'''
-    awk = "| awk '{if(NR%4==2) print length($1)}'"
-    
-    log.info('[alignment] Analyzing read length')
-    if paired:
-        fq1, fq2 = fqs
-
-        command = ['zcat <', fq1, awk, '>' , reads_file]
-        run_command(command)
-        
-        command = ['zcat <',fq2,awk, '>>', reads_file]
-        run_command(command)
-        
-    else:
-        fq = fqs[0]
-        command = ['zcat <',fq,awk,'>',reads_file]
-        run_command(command)
-        
-    read_lengths = np.genfromtxt(reads_file)
-    
-    num = len(read_lengths)
-    avg = round(np.mean(read_lengths), 4)
-    std = round(np.std(read_lengths), 4)
-    
-    remove_files([reads_file], keep_files)
-    
-    return num, avg, std
-
-def pseudoalign(fqs, sample, paired, reference, outdir, temp, 
-                         threads, keep_files, partial = False):
-    '''Calls Kallisto to pseudoalign reads.'''
-    file_list = []
-    
-    # Get read length stats
-    reads_file = ''.join([temp, sample, '.reads.txt'])
-    num, avg, std = analyze_reads(fqs, paired, reads_file, keep_files)
-    
-    # Kallisto fails if std used for single-end is 0
-    if std == 0: std = .00001
-
-    temp2 = check_path(''.join([temp, sample]))
-    command = ['kallisto pseudo -i', reference, '-t', threads, '-o', temp2]
-        
-    if paired:
-        command.extend([fqs[0], fqs[1]])
-    else:
-        fq = fqs[0]
-        command.extend(['--single -l', str(avg), '-s', str(std), fq])
-        
-    run_command(command, '[alignment] Pseudoaligning with Kallisto: ')
-
-    # Move and rename Kallisto output
-    file_in = ''.join([temp2, 'pseudoalignments.tsv'])
-    count_file = ''.join([temp, sample, '.counts.tsv'])
-    file_list.append(file_in)
-    run_command(['mv', file_in, count_file])
-    
-    file_in = ''.join([temp2, 'pseudoalignments.ec'])
-    eq_file = ''.join([temp, sample, '.eq.tsv'])
-    file_list.append(file_in)
-    run_command(['mv', file_in, eq_file])
-
-    run_command(['rm -rf', temp2])
-    remove_files(file_list, keep_files)
-           
-    return count_file, eq_file, num, avg, std
-
-#-----------------------------------------------------------------------------
-# Process transcript assembly output
-#-----------------------------------------------------------------------------
-
-def process_counts(count_file, eq_file, gene_list, allele_idx, 
-                   allele_lengths, keep_files): 
-    '''Processes pseudoalignment output, returning compatibility classes.'''
-    log.info('[alignment] processing pseudoalignment')
-    # Process count information
-    counts = dict()
-    with open(count_file, 'r', encoding='UTF-8') as file:
-        for line in file.read().splitlines():
-            eq, count = line.split('\t')
-            counts[eq] = float(count)
-
-    
-    # Process compatibility classes
-    eqs = dict()
-    with open(eq_file, 'r', encoding='UTF-8') as file:
-        for line in file.read().splitlines():
-            eq, indices = line.split('\t')
-            eqs[eq] = indices.split(',')
-
-    # Set up compatibility class index
-    eq_idx = defaultdict(list)
-    
-    count_unique = 0
-    count_multi = 0
-    class_unique = 0
-    class_multi = 0
-    
-    for eq, indices in eqs.items():
-        if [idx for idx in indices if not allele_idx[idx]]:
-            continue
-
-        genes = list({get_gene(allele) for idx in indices 
-                        for allele in allele_idx[idx]})
-        count = counts[eq]
-        
-        if len(genes) == 1 and counts[eq] > 0:
-            gene = genes[0]
-            eq_idx[gene].append((indices, count))
-            
-            count_unique += count
-            class_unique += 1
-        else:
-            count_multi += count
-            class_multi += 1
-
-    # Alleles mapping to their respective compatibility classes
-    allele_eq = defaultdict(set)
-    for eqs in eq_idx.values():
-        for eq,(indices,_) in enumerate(eqs):
-            for idx in indices:
-                allele_eq[idx].add(eq)
-            
-    remove_files([count_file, eq_file], keep_files)
-    
-    align_stats = [count_unique, count_multi, class_unique, class_multi]
-    
-    return eq_idx, allele_eq, align_stats
-           
-
-def get_count_stats(eq_idx, gene_length):
-    '''Returns counts and relative abundance of genes.'''
-    stats = {gene:[0,0,0.] for gene in eq_idx}
-    
-    abundances = defaultdict(float)
-    for gene, eqs in eq_idx.items():
-        count = sum([count for eq,count in eqs])
-        abundances[gene] = count / gene_length[gene]
-        stats[gene][0] = count
-        stats[gene][1] = len(eqs)
-        
-    total_abundance = sum(abundances.values())
-
-    for gene, abundance in abundances.items():
-        stats[gene][2] = abundance / total_abundance
-
-    return stats
-    
 #-----------------------------------------------------------------------------
 # Genotype
 #-----------------------------------------------------------------------------
@@ -601,10 +448,11 @@ def genotype_gene(gene, gene_count, eqs, lengths, allele_idx, population,
 #-----------------------------------------------------------------------------
 
 def arg_check_files(parser, arg):
+    accepted_formats = ('alignment.p','fq.gz','fastq.gz','fq','fastq')
     for file in arg.split():
         if not os.path.isfile(file):
             parser.error('The file %s does not exist.' %file)
-        elif not (file.endswith('alignment.p') or file.endswith('.fq.gz')):
+        elif not file.lower().endswith(accepted_formats):
             parser.error('The format of %s is invalid.' %file)
         return arg
         
@@ -778,7 +626,9 @@ if __name__ == '__main__':
         sys.exit('[genotype] Error: FASTQ or alignment.p file required')
     
     sample = os.path.basename(args.file[0]).split('.')[0]
-    temp, outdir = [check_path(path) for path in [args.temp, args.outdir]]
+    
+    outdir = check_path(args.outdir)
+    temp = create_temp(args.temp)
     
     if args.log:
         log_file = args.log
@@ -806,7 +656,7 @@ if __name__ == '__main__':
     hline()
     log.info(f'[log] Date: %s', str(date.today()))
     log.info(f'[log] Sample: %s', sample)
-    log.info(f'[log] Input file(s): %s', ', '.join(args.file))
+    log.info(f'[log] Input file(s): %s', f'\n\t\t     '.join(args.file))
         
     prior = pd.read_csv(hla_freq, delimiter='\t')
     prior = prior.set_index('allele').to_dict('index')
@@ -817,50 +667,20 @@ if __name__ == '__main__':
     
     # loads reference information
     with open(hla_p, 'rb') as file:
-        (commithash,
-        (gene_set, allele_idx, lengths, gene_length)) = pickle.load(file)
+        reference_info = pickle.load(file)
+        (commithash,(gene_set, allele_idx, 
+         lengths, gene_length)) = reference_info
         
     log.info(f'[log] Reference: %s', commithash)
     hline()
         
-    # runs transcript assembly if intermediate json not provided
-    reference = hla_idx
-    if not args.file[0].endswith('.alignment.p'):
-        
-        paired = True if len(args.file) == 2 else False
-        
-        count_file, eq_file, num, avg, std = pseudoalign(args.file,
-                                                         sample,
-                                                         paired,
-                                                         reference,
-                                                         outdir, 
-                                                         temp,
-                                                         args.threads,
-                                                         args.keep_files)
-        
-        eq_idx, allele_eq, align_stats = process_counts(count_file,
-                                                         eq_file, 
-                                                         gene_set, 
-                                                         allele_idx, 
-                                                         lengths,
-                                                         args.keep_files)
-        
-        gene_stats = get_count_stats(eq_idx, gene_length)
-
-        with open(''.join([outdir, sample, '.alignment.p']), 'wb') as file:
-            output = [commithash, eq_idx, allele_eq, paired, align_stats, 
-                      gene_stats, num, avg, std]
-            pickle.dump(output, file)
-            
+    if args.file[0].endswith('.alignment.p'):
+        alignment_info = load_alignment(args.file[0], commithash)
     else:
-        log.info(f'[alignment] Loading previous alignment %s', args.file[0])
-        with open(args.file[0], 'rb') as file:
-            (commithash_alignment, eq_idx, allele_eq, paired, 
-             align_stats, gene_stats, num, avg, std) = pickle.load(file)
-             
-        if commithash != commithash_alignment:
-            sys.exit('[genotype] Error: reference used for alignment ' +
-                     'different than the one in the database')
+        alignment_info = get_alignment(args.file, sample, hla_idx,
+                                      reference_info, outdir, temp, args.threads)
+        
+    commithash, eq_idx, allele_eq, paired, align_stats, gene_stats = alignment_info
 
     if not args.drop_iterations:
         if paired: args.drop_iterations = 20
@@ -868,26 +688,7 @@ if __name__ == '__main__':
         
     em_results = dict()
     genotypes = dict()
-    
-    count_unique, count_multi, class_unique, class_multi = align_stats
-    log.info('[alignment] Processed {:.0f} reads, {:.0f} pseudoaligned '
-             .format(num, count_unique + count_multi)+
-             'to HLA reference')
-              
-    log.info('[alignment] {:.0f} reads mapped to a single HLA gene'
-             .format(count_unique))
-    
-    # Print gene abundance information
-    log.info('[alignment] Observed HLA genes:')
-
-    log.info('\t\t{: <10}    {}    {}    {}'
-             .format('gene','abundance','read count','classes'))
-
-    for g,(c,e,a) in sorted(gene_stats.items()):
-        log.info('\t\tHLA-{: <6}    {: >8.2f}%    {: >10.0f}    {: >7.0f}'
-                 .format(g, a*100, c, e))
         
-
     hline()
     log.info('[genotype] Genotyping parameters:')
     log.info(f'\t\tpopulation: %s', args.population)
@@ -920,13 +721,12 @@ if __name__ == '__main__':
                                             
         em_results[gene] = em
         genotypes[gene] = genotype
-        
-    with open(''.join([outdir, sample, '.em.json']), 'w') as file:
-            json.dump(em_results, file)
             
     with open(''.join([outdir, sample, '.genotype.json']), 'w') as file:
             json.dump(genotypes, file)
             
+    remove_files(temp, args.keep_files)
+    
     hline()
     log.info('')
 
