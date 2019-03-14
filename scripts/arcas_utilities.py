@@ -27,8 +27,8 @@ import re
 import logging as log
 from subprocess import PIPE, run
 
-__version__     = '1.0'
-__date__        = 'November 2018'
+__version__     = '0.0'
+__date__        = '2018-12-11'
 
 #-------------------------------------------------------------------------------
 

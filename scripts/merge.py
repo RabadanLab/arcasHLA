@@ -30,6 +30,9 @@ from argparse import RawTextHelpFormatter
 
 from arcas_utilities import check_path
 
+__version__     = '0.0'
+__date__        = '2018-12-11'
+
 #-------------------------------------------------------------------------------
 
 def get_paths(indir):
