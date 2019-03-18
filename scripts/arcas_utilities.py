@@ -25,14 +25,15 @@
 import os
 import re
 import logging as log
-from subprocess import PIPE, run
+import uuid
+from subprocess import PIPE, STDOUT, run
 
-__version__     = '0.0'
-__date__        = '2018-12-11'
+__version__     = '0.1'
+__date__        = '2019-03-14'
 
 #-------------------------------------------------------------------------------
 
-def process_allele(allele,n,keep_alpha = True):
+def process_allele(allele, n, keep_alpha = True):
     '''Lowers allele resolution to n-fields.'''
     temp = []
     alpha = False
@@ -62,24 +63,39 @@ def check_path(path):
         
     return path
 
-def remove_files(file_list,keep_files):
+def remove_files(files, keep_files):
     '''Removes intermediate files.'''
     if keep_files:
         return
 
-    for file in file_list:
-        run_command(['rm',file])
+    if type(files) == list:
+        for file in files:
+            run_command(['rm',file])
+    else:
+        run_command(['rm',files])
         
 def run_command(command, message = ''):
     '''Outputs message and command to log, runs command and returns output.'''
     if type(command) == list:
         command = ' '.join(command)
 
-    if message: log.info(''.join([message,'\n\n\t', command,'\n']))
-        
+    if message: 
+        log.info(''.join([message,'\n\n\t', command,'\n']))
+    
     output = run(command, shell=True, stdout=PIPE, stderr=PIPE)
+    
+    if message:
+        stderr = '\t' + output.stderr.decode('utf-8')
+        stderr = re.sub('\n','\n\t',stderr)
+        if len(stderr) > 1:
+            log.info(stderr)
         
     return output
+
+def create_temp(temp):
+    temp = check_path(temp)
+    temp_folder = ''.join([temp,'arcas_' + str(uuid.uuid4())])
+    return check_path(temp_folder)
 
 def hline():
     log.info('-'*80)

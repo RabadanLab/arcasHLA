@@ -32,11 +32,10 @@ import logging as log
 from datetime import date
 from os.path import isfile
 from argparse import RawTextHelpFormatter
-from arcas_utilities import (process_allele, check_path, 
-                             remove_files, run_command, hline)
+from arcas_utilities import *
 
-__version__     = '0.0'
-__date__        = '2018-12-11'
+__version__     = '0.1'
+__date__        = '2019-03-14'
 
 #-------------------------------------------------------------------------------
 #   Extract Reads
@@ -52,8 +51,7 @@ def index_bam(bam):
         sys.exit('[extract] Error: unable to index bam file.')
         
 
-def extract_reads(bam, outdir, paired, unmapped, alts, 
-                    temp, threads, keep_files):
+def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
     '''Extracts reads from chromosome 6 and alts/decoys if applicable.'''
     
     log.info(f'[extract] Extracting reads from {bam}')
@@ -94,7 +92,7 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
     
     # Extract unmapped reads
     if unmapped:
-        message = '[extract] Extracting chromosome 6: '
+        message = '[extract] Extracting unmapped reads: '
         command = ['samtools', 'view', '-@'+threads]
         
         if paired: command.append('-f 12')
@@ -147,8 +145,6 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
         command.extend(['-fq', fq])
         run_command(command, message)
         run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq])
-
-    remove_files(file_list, keep_files)
 
 #-------------------------------------------------------------------------------
 #   Main
@@ -215,9 +211,12 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    temp, outdir = [check_path(path) for path in [args.temp,args.outdir]]
+    outdir = check_path(args.outdir)
+    temp = create_temp(args.temp)
     
     sample = os.path.basename(args.bam).split('.')[0]
+    
+    datDir = os.path.dirname(os.path.realpath(__file__)) + '/../dat/'
     
     if args.log:
         log_file = args.log
@@ -249,7 +248,7 @@ if __name__ == '__main__':
              .format( 'paired' if args.paired else 'single'))
     hline()
     
-    with open('dat/info/decoys_alts.p', 'rb') as file:
+    with open(datDir + '/info/decoys_alts.p', 'rb') as file:
         alts = pickle.load(file)
     
     extract_reads(args.bam,
@@ -258,8 +257,10 @@ if __name__ == '__main__':
                   args.unmapped,
                   alts,
                   temp,
-                  args.threads,
-                  args.keep_files)
+                  args.threads)
+    
+    remove_files(temp, args.keep_files)
+    
     hline()
     log.info('')
 #-------------------------------------------------------------------------------

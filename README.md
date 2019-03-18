@@ -4,9 +4,9 @@ arcasHLA performs high resolution genotyping for HLA class I and class II genes 
 
 ### Dependencies ###
 Make sure the following programs are in your `PATH`:
-- [Samtools](http://www.htslib.org/)
-- [bedtools](http://bedtools.readthedocs.io/)
-- [pigz](https://zlib.net/pigz/)
+- [Samtools v1.19](http://www.htslib.org/)
+- [bedtools v2.27.1](http://bedtools.readthedocs.io/)
+- [pigz v2.3.1](https://zlib.net/pigz/)
 - [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
 - Python 3.6
 
@@ -53,10 +53,16 @@ Expected output in `test/output/test.partial_genotype.json`:
  "DQB1": ["DQB1*06:04:01", "DQB1*02:02:01"],
  "DRB1": ["DRB1*03:02:01", "DRB1*14:02:01"]}
 ```
-Before further usage, remember to update to the current version.
+Before further usage, remember to update to the 3.34.0.
 ```
-./arcasHLA reference --update
+./arcasHLA reference --version 3.34.0
 ```
+At this time, cloning the latest version of IMGTHLA (3.35.0) results in a corrupted database due to an issue with GitHub's Large File Storage. To update the arcasHLA's reference to the current version, run the following commands.
+```
+curl https://media.githubusercontent.com/media/ANHIG/IMGTHLA/Latest/hla.dat > dat/IMGTHLA/hla.dat
+./arcasHLA reference --rebuild --v
+```
+
 
 ### Usage ###
 
