@@ -30,7 +30,7 @@ import argparse
 import logging as log
 
 from argparse import RawTextHelpFormatter
-from os.path import isfile, isdir
+from os.path import isfile, isdir, dirname, realpath
 from subprocess import PIPE, run
 
 from textwrap import wrap
@@ -41,26 +41,29 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from arcas_utilities import (process_allele, run_command, get_gene, 
-                             hline, check_path)
+from arcas_utilities import *
 
-__version__     = '1.0'
-__date__        = 'November 2018'
+#-------------------------------------------------------------------------------
+
+__version__     = '0.2'
+__date__        = '2019-04-02'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
-IMGTHLA         = 'dat/IMGTHLA/'
+rootDir = dirname(realpath(__file__)) + '/../'
+
+IMGTHLA         = rootDir + 'dat/IMGTHLA/'
 IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
-hla_dat         = 'dat/IMGTHLA/hla.dat'
-hla_fa          = 'dat/ref/hla.fasta'
-partial_fa      = 'dat/ref/hla_partial.fasta'
-hla_p           = 'dat/ref/hla.p'
-partial_p       = 'dat/ref/hla_partial.p'
-hla_idx         = 'dat/ref/hla.idx'
-partial_idx     = 'dat/ref/hla_partial.idx'
-parameters      = 'dat/info/parameters.p'
+hla_dat         = rootDir + 'dat/IMGTHLA/hla.dat'
+hla_fa          = rootDir + 'dat/ref/hla.fasta'
+partial_fa      = rootDir + 'dat/ref/hla_partial.fasta'
+hla_p           = rootDir + 'dat/ref/hla.p'
+partial_p       = rootDir + 'dat/ref/hla_partial.p'
+hla_idx         = rootDir + 'dat/ref/hla.idx'
+partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
+parameters      = rootDir + 'dat/info/parameters.p'
 
 #-------------------------------------------------------------------------------
 #   Fetch and process IMGTHLA database
@@ -104,7 +107,7 @@ def hla_dat_version(print_version = False):
     if print_version:
         log.info(commit)
     
-    return commit
+    return commit[:-1]
 
 def process_hla_dat():
     '''Processes IMGTHLA database, returning HLA sequences, exon locations, 
@@ -123,8 +126,11 @@ def process_hla_dat():
     complete_2fields = set()
     partial_alleles = set()
 
-    with open(hla_dat, 'r') as file:
+    with open(hla_dat, 'r', encoding='UTF-8') as file:
         lines = file.read().splitlines()
+        
+    if len(lines) < 10:
+        sys.exit('[reference] Error: dat/IMGTHLA/hla.dat empty or corrupted.')
 
     for line in lines:
         # Denotes end of sequence, add allele to database
@@ -459,7 +465,7 @@ if __name__ == '__main__':
     log.info('')
     hline()
     
-    check_path('dat/ref')
+    check_path(rootDir + 'dat/ref')
 
     if args.update:
         log.info('[reference] Updating HLA reference')

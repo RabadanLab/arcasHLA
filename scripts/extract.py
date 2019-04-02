@@ -32,11 +32,12 @@ import logging as log
 from datetime import date
 from os.path import isfile
 from argparse import RawTextHelpFormatter
-from arcas_utilities import (process_allele, check_path, 
-                             remove_files, run_command, hline)
+from arcas_utilities import *
 
-__version__     = '1.0'
-__date__        = 'November 2018'
+#-------------------------------------------------------------------------------
+
+__version__     = '0.2'
+__date__        = '2019-04-02'
 
 #-------------------------------------------------------------------------------
 #   Extract Reads
@@ -52,8 +53,7 @@ def index_bam(bam):
         sys.exit('[extract] Error: unable to index bam file.')
         
 
-def extract_reads(bam, outdir, paired, unmapped, alts, 
-                    temp, threads, keep_files):
+def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
     '''Extracts reads from chromosome 6 and alts/decoys if applicable.'''
     
     log.info(f'[extract] Extracting reads from {bam}')
@@ -94,7 +94,7 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
     
     # Extract unmapped reads
     if unmapped:
-        message = '[extract] Extracting chromosome 6: '
+        message = '[extract] Extracting unmapped reads: '
         command = ['samtools', 'view', '-@'+threads]
         
         if paired: command.append('-f 12')
@@ -125,9 +125,12 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
     # Sort BAM
     hla_sorted = ''.join([temp, sample, '.hla.sorted.bam'])
     file_list.append(hla_sorted)
+    file_list.append(hla_sorted + '.bai')
     message = '[extract] Sorting bam: '
-    command = ['samtools', 'sort', '-n', '-@'+threads, 
-                hla_filtered_bam, '-o', hla_sorted]
+    #command = ['samtools', 'sort', '-n', '-@'+threads, 
+    #            hla_filtered_bam, '-o', hla_sorted]
+    command = ['sambamba', 'sort', '-t', threads, '--tmpdir', temp, 
+               '-o', hla_sorted, hla_filtered_bam]
     run_command(command, message)
 
     # Convert BAM to FASTQ and compress
@@ -147,8 +150,35 @@ def extract_reads(bam, outdir, paired, unmapped, alts,
         command.extend(['-fq', fq])
         run_command(command, message)
         run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq])
+        
+def bam_to_fastq(bam, outdir, paired, temp, threads):
+    '''Converts bam to fastq'''
+    
+    log.info(f'[extract] Extracting reads from {bam}')
+    
+    file_list = []
+    sample = os.path.splitext(os.path.basename(bam))[0]
+    
+    # Index bam
+    index_bam(bam)
 
-    remove_files(file_list, keep_files)
+    # Convert BAM to FASTQ and compress
+    message = '[extract] Converting bam to fastq: '
+    command = ['bedtools', 'bamtofastq', '-i', bam]
+    if paired:
+        fq1 = ''.join([outdir, sample, '.1.fq'])
+        fq2 = ''.join([outdir, sample, '.2.fq'])
+        command.extend(['-fq', fq1, '-fq2', fq2])
+        run_command(command, message)
+        
+        run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq1])
+        run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq2])
+        
+    else:
+        fq = ''.join([outdir, sample, '.fq'])
+        command.extend(['-fq', fq])
+        run_command(command, message)
+        run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq])
 
 #-------------------------------------------------------------------------------
 #   Main
@@ -186,7 +216,12 @@ if __name__ == '__main__':
     parser.add_argument('--unmapped', 
                         action = 'count',
                         help='include unmapped reads\n  default: False\n\n',
-                        default=False)    
+                        default=False)
+    
+    parser.add_argument('--allreads', 
+                        action = 'count',
+                        help='output all reads to fastq\n  default: False\n\n',
+                        default=False)
                         
     parser.add_argument('-o', '--outdir', 
                         type=str,
@@ -215,9 +250,12 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    temp, outdir = [check_path(path) for path in [args.temp,args.outdir]]
+    outdir = check_path(args.outdir)
+    temp = create_temp(args.temp)
     
     sample = os.path.basename(args.bam).split('.')[0]
+    
+    datDir = os.path.dirname(os.path.realpath(__file__)) + '/../dat/'
     
     if args.log:
         log_file = args.log
@@ -249,17 +287,23 @@ if __name__ == '__main__':
              .format( 'paired' if args.paired else 'single'))
     hline()
     
-    with open('dat/info/decoys_alts.p', 'rb') as file:
+    with open(datDir + '/info/decoys_alts.p', 'rb') as file:
         alts = pickle.load(file)
     
-    extract_reads(args.bam,
-                  outdir, 
-                  args.paired,
-                  args.unmapped,
-                  alts,
-                  temp,
-                  args.threads,
-                  args.keep_files)
+    if args.allreads:
+        bam_to_fastq(args.bam, outdir, args.paired, temp, args.threads)
+        
+    else:
+        extract_reads(args.bam,
+                      outdir, 
+                      args.paired,
+                      args.unmapped,
+                      alts,
+                      temp,
+                      args.threads)
+    
+    remove_files(temp, args.keep_files)
+    
     hline()
     log.info('')
 #-------------------------------------------------------------------------------

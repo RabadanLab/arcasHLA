@@ -33,6 +33,11 @@ from arcas_utilities import check_path
 
 #-------------------------------------------------------------------------------
 
+__version__     = '0.2'
+__date__        = '2019-04-02'
+
+#-------------------------------------------------------------------------------
+
 def get_paths(indir):
     '''Get all file paths that match arcasHLA output.'''
     partial_files = []
@@ -133,7 +138,7 @@ if __name__ == '__main__':
                         default=argparse.SUPPRESS)
     
     parser.add_argument('-i',
-                        '--indir',
+                        '--input',
                         type=str,
                         help='directory containing arcasHLA files\n\n',
                         default='.',
@@ -159,34 +164,55 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    indir, outdir = [check_path(path) for path in [args.indir, args.outdir]]
+    outdir = check_path(args.outdir)
     
-    genotype_files, partial_files, count_files, quant_files = get_paths(indir)
-    
-    if genotype_files:
-        process_json(genotype_files, 
-                     indir, 
-                     outdir, 
-                     args.run, 
-                     'genotypes.json')
+    if os.path.isdir(args.input):
         
-    if partial_files:
-        process_json(partial_files, 
-                     indir, 
-                     outdir,  
-                     args.run, 
-                     'partial_genotypes.json')
-    if count_files:
-        process_count(count_files,
-                     indir,
-                     outdir,
-                     args.run,
-                     'counts.tsv')
+        # add convert polysolver output
+        
+        indir = check_path(args.input)
     
-    if quant_files:
-        process_quant(quant_files, 
-                     indir, 
-                     outdir,  
-                     args.run, 
-                     'quant.tsv')
+        genotype_files, partial_files, count_files, quant_files = get_paths(indir)
+    
+        if genotype_files:
+            process_json(genotype_files, 
+                         indir, 
+                         outdir, 
+                         args.run, 
+                         'genotypes.json')
+
+        if partial_files:
+            process_json(partial_files, 
+                         indir, 
+                         outdir,  
+                         args.run, 
+                         'partial_genotypes.json')
+        if count_files:
+            process_count(count_files,
+                         indir,
+                         outdir,
+                         args.run,
+                         'counts.tsv')
+
+        if quant_files:
+            process_quant(quant_files, 
+                         indir, 
+                         outdir,  
+                         args.run, 
+                         'quant.tsv')
+    else:
+        # check input type: current, pre-2009 (only if Cw), polysolver
+        # check input resolution: number of fields
+        # warn if number of fields is inconsistent
+        
+        # output type is default: output current nomenclature, same number of fields as input
+        # change resolution: warn if output resolution > input resolution (take the first allele)
+        # change output type:
+        #    polysolver - increase resolutions with warning, warn if allele is missing, 
+        #                 take nearest neighbor by ambiguity then by numerical order
+        #                 option to output to individual files (input for LOHHLA)
+        #    ambiguity - output with "g" ending
+        #    super-groups - output based on supergrouping
+        pass
+        
 #-------------------------------------------------------------------------------

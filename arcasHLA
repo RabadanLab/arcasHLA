@@ -4,8 +4,8 @@
 #-----------------------------------------------------------------------------
 #
 #   Authors:    Rose Orenbuch, Ioan Filip, Itsik Pe'er
-#   Date:       November 2018
-#   Version:    1.0
+#   Date:       2019-03-14
+#   Version:    0.1
 #   License:    GNU
 #
 #-----------------------------------------------------------------------------
@@ -48,33 +48,35 @@ fi
 #   Tools
 #-----------------------------------------------------------------------------
 
+ARCASHLA_ROOT_DIR=$(realpath $(dirname $0))
+
 if [ "$1" == "extract" ]; then
 
-    python3 ./scripts/extract.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/extract.py ${@:2}
 
 elif [ "$1" == "genotype" ]; then
 
-    python3 ./scripts/genotype.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/genotype.py ${@:2}
 
 elif [ "$1" == "merge" ]; then
 
-    python3 ./scripts/merge.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/merge.py ${@:2}
 
 elif [ "$1" == "reference" ]; then
 
-    python3 ./scripts/reference.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/reference.py ${@:2}
 
 elif [ "$1" == "partial" ]; then
 
-    python3 ./scripts/partial.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/partial.py ${@:2}
     
 elif [ "$1" == "quant_ref" ]; then
 
-    python3 ./scripts/quant_ref.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/quant_ref.py ${@:2}
     
 elif [ "$1" == "quant" ]; then
 
-    python3 ./scripts/quant.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/quant.py ${@:2}
     
 #-----------------------------------------------------------------------------
 #   Usage
