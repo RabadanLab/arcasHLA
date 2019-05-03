@@ -331,6 +331,7 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, gene_count,
                 allele1 = process_allele(allele_idx[a1[0]][0],2)
                 allele2 = process_allele(allele_idx[a2[0]][0],2)
                 if allele1 not in prior or allele2 not in prior:
+                    pair_prior[(a1,a2)] = 0.0
                     continue
 
                 pair_prior[(a1,a2)] =   prior[allele1][population] \
