@@ -70,11 +70,14 @@ dummy_HLA_fa       = rootDir + 'dat/ref/GRCh38.chr6.HLA.fasta'
 
 #-------------------------------------------------------------------------------
 
-def build_custom_reference(subject, genotype, mode, chr6, temp):
+def build_custom_reference(subject, genotype, grouping, transcriptome_type, temp):
+    print(genotype)
     
     dummy_HLA_dict = SeqIO.to_dict(SeqIO.parse(dummy_HLA_fa, 'fasta')) 
     
-    if chr6:
+    if transcriptome_type == 'none':
+        transcriptome = []
+    elif transcriptome_type == 'chr6':
         transcriptome = list(SeqIO.parse(GRCh38_chr6, 'fasta'))
     else:
         transcriptome = list(SeqIO.parse(GRCh38, 'fasta'))
@@ -109,9 +112,9 @@ def build_custom_reference(subject, genotype, mode, chr6, temp):
     for allele_id, allele in genotype.items():
         gene = get_gene(allele)
         
-        if mode == 'single':
+        if grouping == 'single':
             sequences = [cDNA_single[allele]]
-        elif mode == 'G-group':
+        elif grouping == 'g-group':
             sequences = [seq for a in groups[allele] for seq in cDNA[a]]
         else:
             sequences = [seq for seq in cDNA[allele]]
@@ -146,26 +149,33 @@ def build_custom_reference(subject, genotype, mode, chr6, temp):
         pickle.dump([genes,genotype,hla_idx,allele_idx,lengths], file)
         
 
-    run_command(['kallisto', 'index','-i', indv_idx, indv_fasta])
-    
-def process_json_genotype(input_genotype):
+    output = run_command(['kallisto', 'index','-i', indv_idx, indv_fasta])
+    print(output)
+
+def process_json_genotype(input_genotype, genes):
     genotype = dict()
     for gene, alleles in input_genotype.items():
+        if genes and gene not in genes:
+            continue
+        
         alleles = [process_allele(allele,2) for allele in alleles]
         if len(alleles) == 2:
             genotype[gene + '1'], genotype[gene + '2'] = alleles
         else:
-            genotype[gene + '1'], genotype[gene + '2'] = alleles[0]
+            genotype[gene + '1'] = genotype[gene + '2'] = alleles[0]
     return genotype
 
-def process_str_genotype(input_genotype):
+def process_str_genotype(input_genotype, genes):
     genotype = dict()
     for allele in input_genotype.split(','):
         gene = get_gene(allele)
+        if genes and gene not in genes:
+            continue
+        
         if gene + '1' not in genotype:
             genotype[gene + '1'] = process_allele(allele,2)
         elif gene + '2' not in genotype:
-            genotype[gene + '1'] = process_allele(allele,2)
+            genotype[gene + '2'] = process_allele(allele,2)
         else:
             sys.exit('[quant] Error: more than 2 alleles provided for a gene.')
             run_command(['rm -rf', temp])
@@ -178,66 +188,83 @@ if __name__ == '__main__':
     with open('dat/info/parameters.p', 'rb') as file:
         genes, populations, databases = pickle.load(file)
     
-    parser = argparse.ArgumentParser(prog='arcasHLA quant',
-                                 usage='%(prog)s [options] FASTQs',
+    parser = argparse.ArgumentParser(prog='arcasHLA customize',
+                                 usage='%(prog)s [options]',
                                  add_help=False,
                                  formatter_class=RawTextHelpFormatter)
-    
-    parser.add_argument('input',
-                        type=str,
-                        nargs='*',
-                        help='arcasHLA output genotype.json or genotypes.json \nor tsv with format specified in README.md\n\n')
     
     parser.add_argument('-h',
                         '--help', 
                         action = 'help',
-                        help='show this help message and exit\n\n',
-                        default=argparse.SUPPRESS)
+                        help = 'show this help message and exit\n\n',
+                        default = argparse.SUPPRESS)
     
-    parser.add_argument('--chr6', 
-                        action='count',
-                        help='restrict transcriptome to chr 6\n  default: False\n\n',
-                        default=False)
+    parser.add_argument('-G',
+                        '--genotype',
+                        help='comma-separated list of HLA alleles (e.g. A*01:01,A*11:01,...)\narcasHLA output genotype.json or genotypes.json \nor tsv with format specified in README.md',
+                        metavar='',
+                        type=str)
+    
+    parser.add_argument('-s',
+                        '--subject',
+                        help='subject name, only required for list of alleles',
+                        default = '',
+                        metavar='',
+                        type=str)
+    
+    parser.add_argument('-g',
+                        '--genes',
+                        help='comma separated list of HLA genes\n'+
+                             'default: all\n' + '\n'.join(wrap('options: ' +
+                             ', '.join(sorted(genes)), 60)) +'\n\n',
+                        default='', 
+                        metavar='',
+                        type=str)
+
+    parser.add_argument('--transcriptome', 
+                        type = str,
+                        help = 'transcripts to include besides input HLAs\n options: full, chr6, none\n  default: full\n\n',
+                        default='full')
 
     parser.add_argument('--resolution', 
                         type = int,
                         help='genotype resolution, only use >2 when typing performed with assay or Sanger sequencing\n  default: 2\n\n',
-                        default='2')
+                        default=2)
     
-    parser.add_argument('--mode', 
-                        type=str,
-                        help='number of transcripts to include per allele\n single: one 3-field resolution transcript per allele (e.g. A*01:01:01)\nG-group (all transcripts with identical binding regions)\n  default: protein-group\n\n',
+    parser.add_argument('--grouping',
+                        type = str,
+                        help = 'type/number of transcripts to include per allele\n single - one 3-field resolution transcript per allele (e.g. A*01:01:01)\ng-group - all transcripts with identical binding regions \n  default: protein group - all transcripts with identical protein types (2 fields the same)\n\n',
                         default='protein-group')
     
     parser.add_argument('-o',
                         '--outdir',
-                        type=str,
-                        help='out directory\n\n',
-                        default='./', 
-                        metavar='')
+                        type = str,
+                        help = 'out directory\n\n',
+                        default = './', 
+                        metavar = '')
     
     parser.add_argument('--temp', 
-                        type=str,
-                        help='temp directory\n\n',
-                        default='/tmp/', 
-                        metavar='')
+                        type = str,
+                        help = 'temp directory\n\n',
+                        default = '/tmp/', 
+                        metavar = '')
     
     parser.add_argument('--keep_files',
                         action = 'count',
-                        help='keep intermediate files\n\n',
-                        default=False)
+                        help = 'keep intermediate files\n\n',
+                        default = False)
     
     parser.add_argument('-t',
                         '--threads', 
                         type = str,
-                        default='1',
-                        metavar='')
+                        default = '1',
+                        metavar = '')
                         
 
     parser.add_argument('-v',
                         '--verbose', 
                         action = 'count',
-                        default=False)
+                        default = False)
 
     args = parser.parse_args()
     
@@ -246,62 +273,76 @@ if __name__ == '__main__':
         
     outdir = check_path(args.outdir)
     temp = args.temp
+    
+    if len(args.genes) > 0:
+        genes = set(args.genes.split(','))
+    else:
+        genes = None
         
-    if args.input[0].endswith('genotype.json'):
-        subject = os.path.basename(args.input[0]).split('.')[0]
-        if args.verbose: print('[quant] Building reference for', subject)
         
-        with open(args.input[0], 'r') as file:
-            input_genotype = json.load(file)
-            
-        genotype = process_json_genotype(input_genotype)
-        
-        build_custom_reference(subject, genotype, args.mode, args.chr6, temp)
-        
-    elif len(args.input) == 2:
-        subject, filepath = args.input
-        if args.verbose: print('[quant] Building reference for', subject)
-        if filepath.endswith('.json'):
-            with open(filepath, 'r') as file:
-                input_genotype = json.load(file)[subject]
-            genotype = process_json_genotype(input_genotype)
+    if args.genotype.endswith('genotype.json'):
+        if args.subject:
+            subject = args.subject
         else:
-            input_genotypes = pd.read_csv(args.input[1], sep='\t').set_index('subject').to_dict('index')
-            genotype = input_genotypes[subject]
-            
-        build_custom_reference(subject, genotype, args.mode, args.chr6, temp)
+            subject = os.path.basename(args.genotype).split('.')[0]
+        print('HERE')
+        if args.verbose: print('[quant] Building reference for', subject)
+        
+        with open(args.genotype, 'r') as file:
+            input_genotype = json.load(file)
+        
+        genotype = process_json_genotype(input_genotype, genes)
+        print(genes)
+        print(genotype)
+        
+        build_custom_reference(subject, genotype, args.grouping, args.transcriptome, temp)
+        print('done')
         
                 
-    elif args.input[0].endswith('genotypes.json') or args.input[0].endswith('.tsv'):
+    elif args.genotype.endswith('.genotypes.json') or args.genotype.endswith('.tsv'):
         temp = create_temp(temp)
         
-        if args.verbose: print('[quant] Building references from',os.path.basename(args.input[0]))
+        if args.verbose: print('[quant] Building references from',os.path.basename(args.genotype))
         
-        if args.input[0].endswith('genotypes.json'):
-            with open(args.input[0], 'r') as file:
-                subjects = json.load(file).keys()   
+        genotypes = dict()
+        if args.genotype.endswith('genotypes.json'):
+            with open(args.genotype, 'r') as file:
+                input_genotypes = json.load(file)
+            for subject, genotype in input_genotypes.items():
+                genotype = ','.join(process_json_genotype(genotype, genes).values())
+                genotypes[subject] = genotype
+                   
         else:
-            subjects = pd.read_csv(args.input[0], sep='\t')['subject']
-            
-            
+            genotypes = pd.read_csv(args.genotype, sep='\t').set_index('subject').to_dict('index')
+            for subject, genotype in genotypes.items():
+                if genes:
+                    genotypes[subject] = ','.join({allele for allele_id, allele in genotypes[subject].items() if allele[:-1] in genes})
+                else:
+                    genotypes[subject] = ','.join(genotype.values())
         subject_file = temp + 'subjects.txt'
         with open(subject_file,'w') as file:
-            file.write('\n'.join(subjects))
-            
+            file.write('\n'.join([subject + '/' + genotype for subject, genotype in genotypes.items()]))
         command = ['cat', subject_file, '|','parallel', '-j', args.threads,
-                   rootDir + '/arcasHLA', 'quant_ref', 
-                   '{}', args.input[0],
+                   rootDir + '/arcasHLA', 'customize', 
+                   '--subject {//}',
+                   '--genotype {/}',
                    '--resolution', args.resolution,
-                   '--outdir', outdir,
-                   '--temp', temp]
+                   '--grouping', args.grouping,
+                   '--transcriptome', args.transcriptome,
+                   '--outdir', outdir + '/{//}',
+                   '--temp', temp + '/{//}']
         
-        if args.chr6: command.append('--chr6')
-        if args.mode: command.extend(['--mode', args.mode])
         if args.verbose: command.append('--verbose')
         
+        print(' '.join([str(i) for i in command]))
         run_command(command)
-            
-    
+        
         if not args.keep_files: run_command(['rm -rf', temp])
+        
+    else:
+        genotype = process_str_genotype(args.genotype, genes)
+            
+        build_custom_reference(args.subject, genotype, args.grouping, args.transcriptome, temp)
+    
 
 #-----------------------------------------------------------------------------

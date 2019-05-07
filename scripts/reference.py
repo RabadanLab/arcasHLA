@@ -437,11 +437,14 @@ if __name__ == '__main__':
                         
     parser.add_argument('--version', 
                         type = str, 
-                        help='checkout IMGT/HLA version using version\n' + \
-                             '\n'.join(wrap('options: ' + 
-                             ', '.join(sorted(versions.keys())), 60)) +'\n\n',
+                        help='checkout IMGT/HLA version using version\n\n',
                         default=False,
                         metavar='',)
+    
+    parser.add_argument('--version_list', 
+                        action = 'count', 
+                        help='prints available version list\n\n',
+                        default=False)
                         
     parser.add_argument('--commit', 
                         type = str, 
@@ -455,6 +458,10 @@ if __name__ == '__main__':
                         default=False)
     
     args = parser.parse_args()
+    
+    if args.version_list:
+        print('[reference] Available versions:' + '\n\t'.join(sorted(versions)))
+        sys.exit(1)
     
     if args.verbose:
         log.basicConfig(level = log.DEBUG, format = '%(message)s')

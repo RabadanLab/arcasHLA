@@ -70,13 +70,17 @@ elif [ "$1" == "partial" ]; then
 
     python3 ${ARCASHLA_ROOT_DIR}/scripts/partial.py ${@:2}
     
-elif [ "$1" == "quant_ref" ]; then
+elif [ "$1" == "customize" ]; then
 
-    python3 ${ARCASHLA_ROOT_DIR}/scripts/quant_ref.py ${@:2}
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/customize.py ${@:2}
     
 elif [ "$1" == "quant" ]; then
 
     python3 ${ARCASHLA_ROOT_DIR}/scripts/quant.py ${@:2}
+    
+elif [ "$1" == "convert" ]; then
+
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/convert.py ${@:2}
     
 #-----------------------------------------------------------------------------
 #   Usage
@@ -88,6 +92,10 @@ else
     echo "    extract        extracts chromosome 6 reads from bam"
     echo "    genotype       types HLA genes from extracted reads"
     echo "    partial        types partial HLA genes from extracted reads"
+    echo 
+    echo "    customize      create custom HLA reference"
+    echo "    quant          allele specific HLA quantification"
+    echo 
     echo "    merge          processes results into a tab-separated table"
     echo "    reference      check or update HLA reference"
     echo 

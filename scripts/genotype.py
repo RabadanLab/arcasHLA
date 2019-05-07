@@ -363,19 +363,19 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, gene_count,
         elif a1_count == 0:
             log.info('[genotype] Likely heterozygous: minor allele has no '+
                      'nonshared reads')
-            genotype = [a2]
+            genotype = [a2, a2]
         elif a2_count == 0:
             log.info('[genotype] Likely heterozygous: minor allele has no '+
                      'nonshared reads')
-            genotype = [a1]
+            genotype = [a1, a1]
         elif min(a1_count/a2_count, a2_count/a1_count) < zygosity_threshold:
             log.info(f'[genotype] Likely homozygous: minor/major '+
                       'nonshared count {:.2f}'
                       .format(min(a1_count/a2_count, a2_count/a1_count)))
             if a1_count > a2_count:
-                genotype = [a1]
+                genotype = [a1, a1]
             else:
-                genotype = [a2]
+                genotype = [a2, a2]
         else:
             log.info(f'[genotype] Likely heterozygous: minor/major '+
                       'nonshared count {:.2f}'
@@ -391,7 +391,7 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, gene_count,
         pair_count = get_count(a1)
         a1_count = pair_count
         a2_count = None
-        genotype = [process_allele(alleles[0], 3),]
+        genotype = [process_allele(alleles[0], 3),process_allele(alleles[0], 3)]
         
     return genotype, pair_count
 
