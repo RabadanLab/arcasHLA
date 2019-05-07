@@ -34,8 +34,8 @@ from os.path import isfile
 from argparse import RawTextHelpFormatter
 from arcas_utilities import *
 
-__version__     = '0.1'
-__date__        = '2019-03-14'
+__version__     = '0.1.1'
+__date__        = '2019-05-07'
 
 #-------------------------------------------------------------------------------
 #   Extract Reads

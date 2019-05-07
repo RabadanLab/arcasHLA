@@ -43,8 +43,8 @@ from Bio.SeqRecord import SeqRecord
 
 from arcas_utilities import *
 
-__version__     = '0.1'
-__date__        = '2019-03-14'
+__version__     = '0.1.1'
+__date__        = '2019-05-07'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames

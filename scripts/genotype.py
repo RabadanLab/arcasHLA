@@ -44,8 +44,8 @@ from reference import check_ref
 from arcas_utilities import *
 from align import *
 
-__version__     = '0.1'
-__date__        = '2019-03-14'
+__version__     = '0.1.1'
+__date__        = '2019-05-07'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -325,8 +325,9 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, gene_count,
     
         # If more than one pair has the same number of explained reads
         # use allele frequency priors to break the tie
+        pair_prior = dict()
+        
         if len(top_by_reads) > 1 and population:
-            pair_prior = dict()
             for a1,a2 in top_by_reads.keys():
                 allele1 = process_allele(allele_idx[a1[0]][0],2)
                 allele2 = process_allele(allele_idx[a2[0]][0],2)
@@ -335,7 +336,9 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, gene_count,
 
                 pair_prior[(a1,a2)] =   prior[allele1][population] \
                                       * prior[allele2][population]
-                                          
+            
+            
+        if pair_prior:
             max_prior = max(pair_prior.values())
             pair_prior = {pair:prior for pair,prior in pair_prior.items() 
                           if prior >= max_prior}
