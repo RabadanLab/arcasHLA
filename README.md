@@ -8,23 +8,44 @@ arcasHLA performs high resolution genotyping for HLA class I and class II genes 
 ```
 git clone https://github.com/roseorenbuch/arcasHLA.git
 cd arcasHLA
-wget https://www.dropbox.com/s/555ro233smx7abl/quant_ref.zip
-unzip quant_ref.zip
+wget https://www.dropbox.com/s/pcmwc4o1dxw7owk/arcasHLA-quant_reference.zip
+unzip arcasHLA-quant_reference.zip
 ```
+## Build Customized References ##
+#### Input: arcasHLA genotype.json ####
+An individual customized reference can be built from arcasHLA genotype output.
+```
+./arcasHLA quant_ref subject.genotype.json -o ~/ref
+```
+#### Input: arcasHLA merged genotypes.json ####
+Customized references can be built from merged arcasHLA genotype outputs.
+```
+./arcasHLA quant_ref genotypes.json -o ~/ref
+```
+#### Input: HLA tsv ####
 
-## Individual reference ##
-Use `--chr6` flag to only include chromosome 6 transcripts. Genotype should be 2 fields in resolution, comma-separated, at most 2 alleles per HLA gene.
+Customized references can be built from a tab-separated file with the following structure:
+
+| subject | A1      | A2      | B1      | B2      | C1      | C2      |
+|---------|---------|---------|---------|---------|---------|---------|
+| Example | A*01:01 | A*02:01 | B*07:01 | B*52:01 | C*04:01 | C*18:01 |
 
 ```
-./arcasHLA quant_ref subject_name genotype
+./arcasHLA quant_ref hla.tsv -o ~/ref
 ```
+#### Options: ####
+- `--chr6`            : build reference with only chr6 transcripts instead of entire transcriptome *(default: False)
+- `--mode MODE`            : single (lowest digit allele only), protein-group (all transcripts with the same 2-field type), G-group (all transcripts with the same antigen-binding region) *(default: protein-group)                                                      
+- `--o, --outdir DIR` : output directory *(default: `.`)                                                                               
+- `--temp DIR`        : temp directory *(default: `/tmp`)                                                                              
+- `--keep_files`      : keep intermediate files *(default: False)                                                                      
+- `-t, --threads INT` : number of threads *(default: 1)                                                                                
+- `-v, --verbose`     : verbosity *(default: False)                
 
-Example:
-```
-./arcasHLA quant_ref --chr6 -o ~/ref Pt23 A*03:01,A*02:01,B*15:01,B*18:01,C*07:01,C*03:04
-```
 
 ## Quantification ##
+Note: if the reference was built with the `--chr6` flag, you should run `quant` with extracted chromosome 6 FASTQs (see `extract`).
+
 ```
 ./arcasHLA quant --ref /path/to/ref/sample FASTQ
 ```
@@ -34,6 +55,7 @@ Example:
 ./arcasHLA quant --ref ~/ref/Pt23 -t 8 -o /Volumes/quant/ /Volumes/fastq/Pt23_pre.1.fq.gz /Volumes/f
 astq/Pt23_pre.2.fq.gz
 ```
+
 ## Merge ##
 Merge will create a tsv file containing all the quantification results ("run.quant.tsv").
 ```
@@ -48,6 +70,7 @@ Make sure the following programs are in your `PATH`:
 - [pigz](https://zlib.net/pigz/)
 - [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
 - Python 3.6
+- GNU Parallel
 
 arcasHLA requires the following Python modules:
 - [Biopython](https://biopython.org/wiki/Download)
@@ -92,9 +115,14 @@ Expected output in `test/output/test.partial_genotype.json`:
  "DQB1": ["DQB1*06:04:01", "DQB1*02:02:01"],
  "DRB1": ["DRB1*03:02:01", "DRB1*14:02:01"]}
 ```
-Before further usage, remember to update to the current version.
+Before further usage, remember to update to the 3.34.0.
 ```
-./arcasHLA reference --update
+./arcasHLA reference --version 3.34.0
+```
+At this time, cloning the latest version of IMGTHLA (3.35.0) results in a corrupted database due to an issue with GitHub's Large File Storage. To update the arcasHLA's reference to the current version, run the following commands.
+```
+curl https://media.githubusercontent.com/media/ANHIG/IMGTHLA/Latest/hla.dat > dat/IMGTHLA/hla.dat
+./arcasHLA reference --rebuild --v
 ```
 
 ### Usage ###
