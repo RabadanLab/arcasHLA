@@ -16,6 +16,8 @@ arcasHLA requires the following Python modules:
 - SciPy
 - Pandas
 
+arcasHLA also requires coreutils.
+
 ### Test ###
 In order to test arcasHLA partial typing, we need to roll back the reference to an earlier version. First, fetch IMGT/HLA database version 3.24.0:
 ```
@@ -25,7 +27,7 @@ Extract reads:
 ```
 ./arcasHLA extract test/test.bam -o test/output --paired -t 8 -v
 ```
-Complete typing:
+Genotyping (no partial alleles):
 ```
 ./arcasHLA genotype test/output/test.extracted.1.fq.gz test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1,DRB1 -o test/output -t 8 -v
 ```
@@ -69,8 +71,8 @@ curl https://media.githubusercontent.com/media/ANHIG/IMGTHLA/Latest/hla.dat > da
 To see the list of available tools, simply enter `arcasHLA`. To view the required and optional arguments for any of the tools enter `arcasHLA [command] -h`.
 
 - `extract` : Extracts reads mapped to chromosome 6 and any HLA decoys or chromosome 6 alternates.
-- `genotype` : Genotypes complete HLA alleles from extracted reads.
-- `partial` : Genotypes partial HLA alleles from extracted reads and output from `genotype`.
+- `genotype` : Genotypes HLA alleles from extracted reads (no partial alleles).
+- `partial` : Genotypes partial HLA alleles from extracted reads and output from `genotype` (optional).
 - `reference` : Update, specify version or force rebuilding of HLA reference.
 - `merge` : merge genotyping output for multiple samples into a single json file.
 
@@ -92,10 +94,10 @@ Output: `sample.1.fq.gz`, `sample.2.fq.gz`
 - `-t, --threads INT` : number of threads (default: 1)                                                                                
 - `-v, --verbose`     : verbosity (default: False)                
 
-### Genotype - complete ###
+### Genotype ###
 
 #### From FASTQs ####
-To predict the most likely genotype (complete alleles), input the FASTQs produced by `extract`.
+To predict the most likely genotype (no partial alleles), input the FASTQs produced by `extract`.
 
 ```
 arcasHLA genotype [options] /path/to/sample.1.fq.gz /path/to/sample.2.fq.gz
@@ -134,7 +136,7 @@ arcasHLA genotype [options] /path/to/sample.alignment.p
 - `-t, --threads INT` : number of threads (default: 1)                                                                                
 - `-v, --verbose`     : verbosity (default: False)   
 
-### Genotype - partial ###
+### Genotype - partial (optional) ###
 Following genotyping, partial alleles can be predicted. This requires aligning the reads to an alternate, partial allele reference. The `sample.genotype.json` file from the previous step is required.
 
 ```
@@ -143,7 +145,7 @@ arcasHLA partial [options] -G /path/to/sample.genotype.json /path/to/sample.1.fq
    
 Output: `sample.partial_alignment.p`, `sample.partial_genotype.json`
 
-The options for partial typing are the same as complete. Partial typing, like complete, can be run from the intermediate alignment file.
+The options for partial typing are the same as genotype. Partial typing can be run from the intermediate alignment file.
  
 ### Merge jsons ###
 To make analysis easier, this command will merge all jsons produced by genotyping. All `.genotype.json` files will be merged into a single `run.genotypes.json` file and all `.partial_genotype.json` files will be merged into `run.partial_genotypes.json`.

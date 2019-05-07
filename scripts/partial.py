@@ -43,8 +43,8 @@ from arcas_utilities import *
 from align import *
 from genotype import expectation_maximization
 
-__version__     = '0.1'
-__date__        = '2019-03-14'
+__version__     = '0.1.1'
+__date__        = '2019-05-07'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames

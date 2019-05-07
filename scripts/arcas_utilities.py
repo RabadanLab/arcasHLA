@@ -28,8 +28,8 @@ import logging as log
 import uuid
 from subprocess import PIPE, STDOUT, run
 
-__version__     = '0.1'
-__date__        = '2019-03-14'
+__version__     = '0.1.1'
+__date__        = '2019-05-07'
 
 #-------------------------------------------------------------------------------
 
@@ -70,9 +70,9 @@ def remove_files(files, keep_files):
 
     if type(files) == list:
         for file in files:
-            run_command(['rm',file])
+            run_command(['rm -rf',file])
     else:
-        run_command(['rm',files])
+        run_command(['rm -rf',files])
         
 def run_command(command, message = ''):
     '''Outputs message and command to log, runs command and returns output.'''
