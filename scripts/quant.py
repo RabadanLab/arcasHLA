@@ -50,7 +50,9 @@ __version__     = '0.2'
 __date__        = '2019-04-02'
 
 #-------------------------------------------------------------------------------
-
+rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
+parameters = rootDir + 'dat/info/parameters.p'
+#-------------------------------------------------------------------------------
 def arg_check_files(parser, arg):
     for file in arg.split():
         if not os.path.isfile(file):
@@ -61,7 +63,7 @@ def arg_check_files(parser, arg):
     
 if __name__ == '__main__':
     
-    with open('dat/info/parameters.p', 'rb') as file:
+    with open(parameters, 'rb') as file:
         genes, populations, databases = pickle.load(file)
     
     parser = argparse.ArgumentParser(prog='arcasHLA quant',

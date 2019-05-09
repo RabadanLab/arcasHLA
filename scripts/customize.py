@@ -67,6 +67,7 @@ GRCh38_chr6        = rootDir + 'dat/ref/GRCh38.chr6.noHLA.fasta'
 GRCh38             = rootDir + 'dat/ref/GRCh38.all.noHLA.fasta'
 HLA_json           = rootDir + 'dat/ref/hla_transcripts.json'
 dummy_HLA_fa       = rootDir + 'dat/ref/GRCh38.chr6.HLA.fasta'
+parameters = rootDir + 'dat/info/parameters.p'
 
 #-------------------------------------------------------------------------------
 
@@ -185,7 +186,7 @@ def process_str_genotype(input_genotype, genes):
     
 if __name__ == '__main__':
     
-    with open('dat/info/parameters.p', 'rb') as file:
+    with open(parameters, 'rb') as file:
         genes, populations, databases = pickle.load(file)
     
     parser = argparse.ArgumentParser(prog='arcasHLA customize',
