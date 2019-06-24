@@ -70,6 +70,10 @@ elif [ "$1" == "partial" ]; then
 
     python3 ${ARCASHLA_ROOT_DIR}/scripts/partial.py ${@:2}
     
+elif [ "$1" == "convert" ]; then
+
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/convert.py ${@:2}
+    
 #-----------------------------------------------------------------------------
 #   Usage
 #-----------------------------------------------------------------------------
