@@ -36,8 +36,8 @@ from arcas_utilities import check_path, process_allele
 
 #-------------------------------------------------------------------------------
 
-__version__     = '0.2'
-__date__        = '2019-04-02'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
 #   Paths and fileames
@@ -49,6 +49,63 @@ hla_convert = rootDir + 'dat/ref/hla.convert.p'
 
 #-------------------------------------------------------------------------------
         
+def convert_allele(allele, resolution):
+    '''Checks nomenclature of input allele and returns converted allele.'''
+    i = len(allele.split(':'))
+        
+    # Input: P-group allele
+    if allele[-1] == 'P':
+        if resolution == 'g-group': 
+            sys.exit('[convert] Error: p-group cannot be converted ' +
+                     'to g-group.')
+
+        # Output: 1-field allele unless forced
+        elif type(resolution) == int:
+            if resolution > 1 and not args.force:
+                sys.exit('[convert] Error: p-group cannot be ' +
+                         'converted to %.0f fields.' %resolution)
+            allele = process_allele(allele[:-1], resolution)
+
+    # Input: G-group allele
+    elif allele[-1] == 'G':
+
+        # Output: 1-field allele unless forced
+        if type(resolution) == int:
+            if resolution > 1 and not args.force:
+                sys.exit('[convert] Error: g-group cannot be converted' +
+                         'to %.0f fields.' %resolution)
+            allele = process_allele(allele[:-1], resolution)
+            
+        # Output: P-group allele
+        elif resolution == 'p-group': 
+            if allele[:-1] in p_group[i]:
+                allele = p_group[i][allele[:-1]]
+
+            elif process_allele(allele[:-1], i - 1) in p_group[i]:
+                allele = p_group[i][process_allele(allele[:-1], i -1)]
+
+    # Input: ungrouped allele
+    # Output: G-group allele
+    elif resolution == 'g-group':
+        if allele in g_group[i]:
+            allele = g_group[i][allele]
+        elif allele[-1] != 'N':
+            allele = process_allele(allele,3)
+
+    # Input: ungrouped allele
+    # Output: P-group allele
+    elif resolution == 'p-group':
+        if allele in p_group[i]:
+            allele = p_group[i][allele]
+            
+    # Input: ungrouped allele
+    # Output: reduced resolution, ungrouped allele
+    elif type(resolution) == int:
+        allele = process_allele(allele, resolution)
+        
+    return allele
+
+#-------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     
@@ -58,8 +115,8 @@ if __name__ == '__main__':
                                      formatter_class=RawTextHelpFormatter)
     
     parser.add_argument('file', 
-                        help='tsv containing HLA genotypes, see github for ' \
-                              + example file structure.\n\n',
+                        help='tsv containing HLA genotypes, see github for ' +
+                              'example file structure.\n\n',
                         type=str)
     
     parser.add_argument('-h',
@@ -67,24 +124,25 @@ if __name__ == '__main__':
                         action = 'help',
                         help='show this help message and exit\n\n',
                         default=argparse.SUPPRESS)
+    
+    parser.add_argument('-r',
+                        '--resolution',
+                        help = 'output resolution (1,2,3) or grouping ' + 
+                               '(g-group, p-group)\n\n',
+                        metavar='')
 
     parser.add_argument('-o',
                         '--outfile',
                         type=str,
-                        help='output file\n  ' \ 
-                              + 'default: ./file_basename.resolution.tsv\n\n',
+                        help='output file\n  default: ' +
+                             './file_basename.resolution.tsv\n\n',
                         default='',
                         metavar='')
-
-    parser.add_argument('--resolution',
-                        help = 'output resolution (1,2,3,4) or grouping ' \ 
-                                + '(g-group, p-group)\n\n',
-                        default='2',
-                        metavar='')
     
-    parser.add_argument('--force',
-                        help = 'force conversion for grouped alleles even if ' \
-                                + 'it results in loss of resolution',
+    parser.add_argument('-f',
+                        '--force',
+                        help = 'force conversion for grouped alleles even if ' +
+                                'it results in loss of resolution',
                         action = 'count',
                         default=False)
     
@@ -110,8 +168,8 @@ if __name__ == '__main__':
         resolution = args.resolution.lower()
         
     if not resolution:
-        sys.exit('[convert] Error: output resolution is needed ' \
-                 + '(1, 2, 3, g-group, p-group).')
+        sys.exit('[convert] Error: output resolution is needed ' +
+                 '(1, 2, 3, g-group, p-group).')
     
     
     # Create outfile name
@@ -133,60 +191,7 @@ if __name__ == '__main__':
             if type(allele) != str:
                 continue
 
-            i = len(allele.split(':'))
-            
-            # If input allele is in P-group nomenclature, it can only be 
-            # converted to 1 field without loss
-            if allele[-1] == 'P':
-                if resolution == 'g-group': 
-                    sys.exit('[convert] Error: p-group cannot be converted ' \
-                             + 'to g-group.')
-                    
-                elif type(resolution) == int and resolution > 1:
-                    if not args.force:
-                        sys.exit('[convert] Error: p-group cannot be ' \
-                                 + 'converted to %.0f fields.' %resolution)
-                    allele = process_allele(allele[:-1], resolution)
-                    
-                elif type(resolution) == int:
-                    allele = process_allele(allele, resolution)
-                
-            # If input allele is in G-group nomenclature, it can only be 
-            # converted to 1 field without loss
-            elif allele[-1] == 'G':
-                
-                if type(resolution) == int and resolution > 1:
-                    if not args.force:
-                        sys.exit('[convert] Error: g-group cannot be converted'\
-                                 + 'to %.0f fields.' %resolution)
-                    allele = process_allele(allele[:-1], resolution)
-                    
-                elif resolution == 'p-group': 
-                    if allele[:-1] in p_group[i]:
-                        allele = p_group[i][allele[:-1]]
-                        
-                    elif process_allele(allele[:-1], i - 1) in p_group[i]:
-                        allele = p_group[i][process_allele(allele[:-1], i -1)]
-                    
-                elif type(resolution) == int:
-                    allele = process_allele(allele, resolution)
-                
-            # If allele not in G-group and not null, reduce resolution 
-            # to 3-fields
-            elif resolution == 'g-group':
-                if allele in g_group[i]:
-                    allele = g_group[i][allele]
-                elif allele[-1] != 'N':
-                    allele = process_allele(allele,3)
-            
-            elif resolution == 'p-group':
-                if allele in p_group[i]:
-                    allele = p_group[i][allele]
-                
-            elif type(resolution) == int:
-                allele = process_allele(allele, resolution)
-
-            genotypes[subject][gene] = allele
+            genotypes[subject][gene] = convert_allele(allele, resolution)
 
     pd.DataFrame(genotypes).T.rename_axis('subject').to_csv(outfile, sep = '\t')
         

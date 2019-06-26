@@ -28,8 +28,8 @@ import logging as log
 import uuid
 from subprocess import PIPE, STDOUT, run
 
-__version__     = '0.1.1'
-__date__        = '2019-05-07'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
 
@@ -93,6 +93,7 @@ def run_command(command, message = ''):
     return output
 
 def create_temp(temp):
+    '''Generates name for temporary folder.'''
     temp = check_path(temp)
     temp_folder = ''.join([temp,'arcas_' + str(uuid.uuid4())])
     return check_path(temp_folder)

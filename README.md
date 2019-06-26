@@ -3,6 +3,10 @@
 arcasHLA performs high resolution genotyping for HLA class I and class II genes from RNA sequencing, supporting both paired and single-end samples.
 
 ### Dependencies ###
+arcasHLA requires the following utilities:
+- [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
+- coreutils
+
 Make sure the following programs are in your `PATH`:
 - [Samtools v1.19](http://www.htslib.org/)
 - [bedtools v2.27.1](http://bedtools.readthedocs.io/)
@@ -15,8 +19,6 @@ arcasHLA requires the following Python modules:
 - NumPy
 - SciPy
 - Pandas
-
-arcasHLA also requires coreutils.
 
 ### Test ###
 In order to test arcasHLA partial typing, we need to roll back the reference to an earlier version. First, fetch IMGT/HLA database version 3.24.0:
@@ -55,16 +57,10 @@ Expected output in `test/output/test.partial_genotype.json`:
  "DQB1": ["DQB1*06:04:01", "DQB1*02:02:01"],
  "DRB1": ["DRB1*03:02:01", "DRB1*14:02:01"]}
 ```
-Before further usage, remember to update to the 3.34.0.
+Remember to update the HLA reference using the following command.
 ```
-./arcasHLA reference --version 3.34.0
+./arcasHLA reference --update
 ```
-At this time, cloning the latest version of IMGTHLA (3.35.0) results in a corrupted database due to an issue with GitHub's Large File Storage. To update the arcasHLA's reference to the current version, run the following commands.
-```
-curl https://media.githubusercontent.com/media/ANHIG/IMGTHLA/Latest/hla.dat > dat/IMGTHLA/hla.dat
-./arcasHLA reference --rebuild --v
-```
-
 
 ### Usage ###
 
@@ -124,12 +120,13 @@ arcasHLA genotype [options] /path/to/sample.alignment.p
 #### Options ####
 - `-g, --genes GENES`       : comma separated list of HLA genes (ex. A,B,C,DQA1,DQB1,DRB1)
 - `-p, --population POPULATION`  : sample population, options are asian_pacific_islander, black, caucasian, hispanic, native_american and prior (default: Prior)
+- `--min_count INT`   : minimum gene read count required for genotyping (default: 75)
 - `--tolerance FLOAT` : convergence tolerance for transcript quantification (default: 10e-7)
 - `--max_iterations INT` : maximmum number of iterations for transcript quantification (default: 1000)
-- `--drop_iterations INT` : number of iterations before dropping low support alleles, a lower number of iterations is recommended for single-end and low read couunt samples (default: paired - 10, single - 4)
+- `--drop_iterations INT` : number of iterations before dropping low support alleles, a lower number of iterations is recommended for single-end and low read count samples (default: paired - 10, single - 4)
 - `--drop_threshold FLOAT` : proportion of maximum abundance an allele needs to not be dropped (default: 0.1)
 - `--zygosity_threshold FLOAT` : threshold for ratio of minor to major allele nonshared count to determine zygosity (default: 0.15)
-- `--log FILE`        : log file for run summary (default: sample.genotype.log)                                                        
+- `--log FILE`        : log file for run summary (default: `sample.genotype.log`)                                                        
 - `--o, --outdir DIR` : output directory (default: `.`)                                                                               
 - `--temp DIR`        : temp directory (default: `/tmp`)                                                                              
 - `--keep_files`      : keep intermediate files (default: False)                                                                      
@@ -148,7 +145,7 @@ Output: `sample.partial_alignment.p`, `sample.partial_genotype.json`
 The options for partial typing are the same as genotype. Partial typing can be run from the intermediate alignment file.
  
 ### Merge jsons ###
-To make analysis easier, this command will merge all jsons produced by genotyping. All `.genotype.json` files will be merged into a single `run.genotypes.json` file and all `.partial_genotype.json` files will be merged into `run.partial_genotypes.json`.
+To make analysis easier, this command will merge all jsons produced by genotyping into a single table. All `.genotype.json` files will be merged into a single `run.genotypes.tsv` file and all `.partial_genotype.json` files will be merged into `run.partial_genotypes.tsv`. In addition, HLA locus read counts and relative abundance produced by alignment will be merged into a single tsv file.
 ```
 arcasHLA merge [options]
 ```
@@ -156,7 +153,25 @@ arcasHLA merge [options]
 - `--run RUN` : run name
 - `--i, --indir DIR` : input directory (default: `.`)     
 - `--o, --outdir DIR` : output directory (default: `.`)                                                                  
-- `-v, --verbose`     : verbosity (default: False)   
+- `-v, --verbose`     : toggle verbosity
+
+### Convert HLA nomenclature ###
+arcasHLA convert changes alleles in a tsv file from its input form to a specified grouped nomenclature (P-group or G-group) or a specified number of fields (i.e. 1, 2 or 3 fields in resolution). This file can be produced by arcasHLA merge or any tsv following the same structure:
+
+| subject      	| A1         	| A2         	| B1         	| B2         	| C1         	| C2         	|
+|--------------	|------------	|------------	|------------	|------------	|------------	|------------	|
+| subject_name 	| A*01:01:01 	| A*01:01:01 	| B*07:02:01 	| B*07:02:01 	| C*04:01:01 	| C*04:01:01 	|
+
+P-group (alleles sharing the same amino acid sequence in the antigen-binding region) and G-group (alleles sharing the same base sequence in the antigen-binding region) can only be reduced to 1-field resolution as alleles with differing 2nd fields can be in the same group. By the same reasoning, P-group cannot be converted into G-group.
+
+```
+arcasHLA convert --resolution [resolution] genotypes.tsv
+```
+#### Options ####
+- `-r, --resolution RESOLUTION` : output resolution (1, 2, 3) or grouping (g-group, p-group)
+- `-o, --outfile FILE` : output file (default: `./run.resolution.tsv`)
+- `-f, --force` : force conversion for grouped alleles even if it results in loss of resolution
+- `-v, --verbose`     : toggle verbosity
 
 ### Change reference ###
 To update the reference to the latest IMGT/HLA version, run
@@ -174,6 +189,14 @@ If you suspect there is an issue  with the reference files, rebuild the referenc
 ```
 arcasHLA reference --rebuild
 ```
+
+Note: if your reference was built with arcasHLA version <= 0.1.1 and you wish to change your reference to versions >= 3.35.0, it may be necessary to remove the IMGTHLA folder due to the need for Git Large File Storage to properly download hla.dat.
+
+```
+rm -rf dat/IMGTHLA
+arcasHLA reference --update
+```
+
 #### Options ####
 - `--update` : update to latest IMGT/HLA version
 - `--version` : checkout IMGT/HLA version using commithash
@@ -181,5 +204,4 @@ arcasHLA reference --rebuild
 - `-v, --verbose`     : verbosity (default: False)   
 
 ## Citation ##
-R. Orenbuch, I. Filip, D. Comito, J. Shaman, I. Pe’er, and R. Rabadan. arcasHLA:
-high resolution HLA typing from RNA seq. bioRxiv doi: [10.1101/479824](https://doi.org/10.1101/479824)
+Orenbuch R, Filip I, Comito D, et al (2019) arcasHLA: high resolution HLA typing from RNA seq. Bioinformatics doi:[10.1093/bioinformatics/btz474](http://dx.doi.org/10.1093/bioinformatics/btz474)

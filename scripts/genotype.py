@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-#   genotype.py: genotypes from extracted chromosome 6 reads.
+#   genotype.py: genotypes from extracted reads.
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
@@ -44,8 +44,8 @@ from reference import check_ref
 from arcas_utilities import *
 from align import *
 
-__version__     = '0.1.1'
-__date__        = '2019-05-07'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -594,6 +594,13 @@ if __name__ == '__main__':
                         default=0.15, 
                         metavar='')
     
+    parser.add_argument('--min_count', 
+                        type=int,
+                        help='minimum gene read count required for genotyping ' +
+                             '\n  default: 75\n\n',
+                        default=75, 
+                        metavar='')
+    
     parser.add_argument('-o',
                         '--outdir',
                         type=str,
@@ -626,21 +633,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if len(args.file) == 0:
-        sys.exit('[genotype] Error: FASTQ or alignment.p file required')
+        sys.exit('[genotype] Error: FASTQ or alignment.p file required.')
     
+    # Set up temporary and output folders, log file
     sample = os.path.basename(args.file[0]).split('.')[0]
-    
     outdir = check_path(args.outdir)
     temp = create_temp(args.temp)
-    
     if args.log:
         log_file = args.log
     else:
-        log_file = ''.join([outdir,sample,'.genotype.log'])
-        
+        log_file = ''.join([outdir,sample,'.genotype.log'])  
     with open(log_file, 'w'):
         pass
-    
     if args.verbose:
         handlers = [log.FileHandler(log_file), log.StreamHandler()]
         
@@ -661,14 +665,15 @@ if __name__ == '__main__':
     log.info(f'[log] Sample: %s', sample)
     log.info(f'[log] Input file(s): %s', f'\n\t\t     '.join(args.file))
         
+    # Load HLA frequencies
     prior = pd.read_csv(hla_freq, delimiter='\t')
     prior = prior.set_index('allele').to_dict('index')
        
-    # checks if HLA reference exists
+    # Checks if HLA reference exists
     check_path(rootDir + 'dat/ref')
     check_ref()
     
-    # loads reference information
+    # Loads reference information
     with open(hla_p, 'rb') as file:
         reference_info = pickle.load(file)
         (commithash,(gene_set, allele_idx, 
@@ -685,32 +690,37 @@ if __name__ == '__main__':
         
     commithash, eq_idx, allele_eq, paired, align_stats, gene_stats = alignment_info
 
+    # Set up EM parameters
     if not args.drop_iterations:
         if paired: args.drop_iterations = 20
         else: args.drop_iterations = 4
         
     em_results = dict()
     genotypes = dict()
-        
+    
     hline()
     log.info('[genotype] Genotyping parameters:')
     log.info(f'\t\tpopulation: %s', args.population)
+    log.info(f'\t\tminimum count: %s', args.min_count)
     log.info(f'\t\tmax iterations: %s', args.max_iterations)
     log.info(f'\t\ttolerance: %s', args.tolerance)
     log.info(f'\t\tdrop iterations: %s', args.drop_iterations)
     log.info(f'\t\tdrop threshold: %s', args.drop_threshold)
     log.info(f'\t\tzygosity threshold: %s', args.zygosity_threshold)
     
+    # For each HLA locus, perform EM then scoring
     for gene in args.genes:
         hline()
         log.info(f'[genotype] Genotyping HLA-{gene}')
         
-        if gene not in gene_stats or gene_stats[gene][0] == 0:
-            log.info(f'[genotype] No reads aligned to HLA-{gene}') 
+        # Skips loci with not enough reads to genotype
+        if gene not in gene_stats or gene_stats[gene][0] < args.min_count:
+            log.info(f'[genotype] Not enough reads aligned to HLA-{gene} to genotype.') 
             continue
         gene_count, eq_count, abundance = gene_stats[gene]
         log.info(f'[genotype] {gene_count:.0f} reads aligned to HLA-{gene} '+
                  f'in {eq_count} classes')
+            
             
         em, genotype = genotype_gene(gene,
                                      gene_count,

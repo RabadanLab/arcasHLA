@@ -43,8 +43,8 @@ from Bio.SeqRecord import SeqRecord
 
 from arcas_utilities import *
 
-__version__     = '0.1.1'
-__date__        = '2019-05-07'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
 #   Paths and fileames
@@ -89,7 +89,6 @@ def fetch_hla_dat():
     command = ['git', 'lfs clone', IMGTHLA_git, IMGTHLA]
     run_command(command,
                 '[reference] Cloning IMGT/HLA database:')
-    #run_command(['git', '-C', IMGTHLA, 'lfs', 'fetch'])
     
 def checkout_version(commithash, verbose = True):
     '''Checks out a specific IMGTHLA github version given a commithash.'''
@@ -102,7 +101,6 @@ def checkout_version(commithash, verbose = True):
         run_command(command, '[reference] Checking out IMGT/HLA:')
     else:
         run_command(command)
-    #run_command(['git', '-C', IMGTHLA, 'lfs', 'fetch'])
         
 def hla_dat_version(print_version = False):
     '''Returns commithash of downloaded IMGTHLA database.'''
@@ -134,6 +132,7 @@ def process_hla_dat():
     with open(hla_dat, 'r', encoding='UTF-8') as file:
         lines = file.read().splitlines()
         
+    # Check if hla.dat failed to download
     if len(lines) < 10:
         sys.exit('[reference] Error: dat/IMGTHLA/hla.dat empty or corrupted.')
 
@@ -543,8 +542,8 @@ if __name__ == '__main__':
     elif args.version:
         if args.version not in versions:
             sys.exit('[reference] Error: invalid version.')
-        #checkout_version(versions[args.version])
-        #build_fasta()
+        checkout_version(versions[args.version])
+        build_fasta()
         build_convert()
         
     elif args.commit:

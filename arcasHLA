@@ -4,8 +4,8 @@
 #-----------------------------------------------------------------------------
 #
 #   Authors:    Rose Orenbuch, Ioan Filip, Itsik Pe'er
-#   Date:       2019-05-07
-#   Version:    0.1.1
+#   Date:       2019-06-26
+#   Version:    0.2.0
 #   License:    GNU
 #
 #-----------------------------------------------------------------------------
@@ -85,6 +85,7 @@ else
     echo "    genotype       types HLA genes from extracted reads"
     echo "    partial        types partial HLA genes from extracted reads"
     echo "    merge          processes results into a tab-separated table"
+    echo "    convert        converts HLA nomenclature/resolution"
     echo "    reference      check or update HLA reference"
     echo 
     echo "Note: run any command with --help to view required fields, options"
