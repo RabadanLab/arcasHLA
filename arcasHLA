@@ -4,8 +4,8 @@
 #-----------------------------------------------------------------------------
 #
 #   Authors:    Rose Orenbuch, Ioan Filip, Itsik Pe'er
-#   Date:       2019-05-07
-#   Version:    0.1.1
+#   Date:       2019-06-26
+#   Version:    0.2.0
 #   License:    GNU
 #
 #-----------------------------------------------------------------------------
@@ -70,6 +70,10 @@ elif [ "$1" == "partial" ]; then
 
     python3 ${ARCASHLA_ROOT_DIR}/scripts/partial.py ${@:2}
     
+elif [ "$1" == "convert" ]; then
+
+    python3 ${ARCASHLA_ROOT_DIR}/scripts/convert.py ${@:2}
+    
 #-----------------------------------------------------------------------------
 #   Usage
 #-----------------------------------------------------------------------------
@@ -81,6 +85,7 @@ else
     echo "    genotype       types HLA genes from extracted reads"
     echo "    partial        types partial HLA genes from extracted reads"
     echo "    merge          processes results into a tab-separated table"
+    echo "    convert        converts HLA nomenclature/resolution"
     echo "    reference      check or update HLA reference"
     echo 
     echo "Note: run any command with --help to view required fields, options"

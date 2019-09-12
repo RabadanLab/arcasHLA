@@ -43,11 +43,11 @@ from Bio.SeqRecord import SeqRecord
 
 from arcas_utilities import *
 
-__version__     = '0.1.1'
-__date__        = '2019-05-07'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
-#   Paths and filenames
+#   Paths and fileames
 #-------------------------------------------------------------------------------
 
 rootDir = dirname(realpath(__file__)) + '/../'
@@ -55,6 +55,9 @@ rootDir = dirname(realpath(__file__)) + '/../'
 IMGTHLA         = rootDir + 'dat/IMGTHLA/'
 IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
 hla_dat         = rootDir + 'dat/IMGTHLA/hla.dat'
+hla_nom_g       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_g.txt'
+hla_nom_p       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_p.txt'
+hla_convert     = rootDir + 'dat/ref/hla.convert.p'
 hla_fa          = rootDir + 'dat/ref/hla.fasta'
 partial_fa      = rootDir + 'dat/ref/hla_partial.fasta'
 hla_p           = rootDir + 'dat/ref/hla.p'
@@ -74,8 +77,7 @@ def check_ref():
     
     if not isfile(hla_dat):
         fetch_hla_dat()
-        
-    if not isfile(hla_fa) or not isfile(hla_p): 
+        build_convert(False)
         build_fasta()
         
 def fetch_hla_dat():
@@ -84,18 +86,21 @@ def fetch_hla_dat():
     if isdir(IMGTHLA):
         run_command(['rm', '-rf', IMGTHLA])
         
-    command = ['git', 'clone', IMGTHLA_git, IMGTHLA]
+    command = ['git', 'lfs clone', IMGTHLA_git, IMGTHLA]
     run_command(command,
-                '[reference] cloning IMGT/HLA database:')
+                '[reference] Cloning IMGT/HLA database:')
     
-def checkout_version(commithash):
+def checkout_version(commithash, verbose = True):
     '''Checks out a specific IMGTHLA github version given a commithash.'''
     
     if not isfile(hla_dat):
         fetch_hla_dat()
 
-    command = ['git', '-C', IMGTHLA, 'checkout', commithash]
-    run_command(command,'[reference] checking out IMGT/HLA:')
+    command = ['git', '-C', IMGTHLA, 'lfs checkout', commithash]
+    if verbose:
+        run_command(command, '[reference] Checking out IMGT/HLA:')
+    else:
+        run_command(command)
         
 def hla_dat_version(print_version = False):
     '''Returns commithash of downloaded IMGTHLA database.'''
@@ -127,6 +132,7 @@ def process_hla_dat():
     with open(hla_dat, 'r', encoding='UTF-8') as file:
         lines = file.read().splitlines()
         
+    # Check if hla.dat failed to download
     if len(lines) < 10:
         sys.exit('[reference] Error: dat/IMGTHLA/hla.dat empty or corrupted.')
 
@@ -216,6 +222,43 @@ def process_hla_dat():
     return (complete_alleles, partial_alleles, gene_set, sequences, utrs, 
            exons, final_exon_length)
 
+def process_hla_nom(hla_nom):
+    '''Processes nomenclature files for arcasHLA convert.'''
+    allele_to_group = defaultdict(dict)
+    
+    single_alleles = set()
+    grouped_alleles = set()
+
+    for line in open(hla_nom, 'r', encoding='UTF-8'):
+        if line.startswith('#'):
+            continue
+
+        gene, alleles, group = line.split(';')
+        alleles = [gene + allele for allele in alleles.split('/')]
+        if len(group) == 1:
+            single_alleles.add(alleles[0])
+            continue
+            
+        group = gene + group[:-1]
+        
+        for allele in alleles:
+            grouped_alleles.add(process_allele(allele,2))
+            for i in range(2,5):
+                allele_to_group[i][process_allele(allele,i)] = group
+
+    # Alleles not included in a group
+    for allele in single_alleles:
+        # Checks if 2-field allele already represented by a group
+        if process_allele(allele,2) not in grouped_alleles:
+            for i in range(2,5):
+                allele_to_group[i][process_allele(allele,i)] = process_allele(allele,2)
+        else:
+            allele_to_group[2][allele] = process_allele(allele,3)
+            allele_to_group[3][allele] = process_allele(allele,3)
+            allele_to_group[4][allele] = allele
+            
+    return allele_to_group
+
 #-------------------------------------------------------------------------------
 #   Saving reference files
 #-------------------------------------------------------------------------------
@@ -253,7 +296,7 @@ def build_fasta():
     log.info('[reference] IMGT/HLA database version:\n')
     hla_dat_version(True)
     
-    log.info('[reference] processing IMGT/HLA database')
+    log.info('[reference] Processing IMGT/HLA database')
     
     # Constructs cDNA sequences for alleles and adds UTRs to the set of 
     # non-coding sequences
@@ -298,6 +341,7 @@ def build_fasta():
         allele_idx = dict()
         lengths = dict()
     
+        # Adds coding sequences
         cDNA = sorted(cDNA.items(), key=lambda x:x[1])
         for i,(seq,alleles) in enumerate(cDNA):
             idx = str(i)
@@ -309,6 +353,7 @@ def build_fasta():
             allele_idx[idx] = sorted(alleles)
             lengths[idx] = len(seq)
         
+        # Adds UTRs
         offset = i + 1
         for i, seq in enumerate(other):
             idx = str(i + offset)
@@ -330,6 +375,7 @@ def build_fasta():
         allele_idx = dict()
         lengths = dict()
     
+        # Adds exon combination sequences
         offset = 0
         for exon in sorted(sequences):
             exon_sequences = sorted(sequences[exon].items(),key=lambda x:x[1])
@@ -349,6 +395,7 @@ def build_fasta():
                 
             offset += i + 1
             
+        # Adds UTRs
         for i, seq in enumerate(other):
             idx = str(i + offset)
             
@@ -373,6 +420,7 @@ def build_fasta():
     combo = {str(i):defaultdict(set) for i in exon_combinations}
     other = set()
 
+    # Build sequences for each allele
     for allele in complete_alleles:
         build_complete(allele)
         build_combination(allele)
@@ -385,25 +433,40 @@ def build_fasta():
     other = list(other)
     gene_length = {g:get_mode(lengths) for g, lengths in gene_length.items()}
     
-    log.info('[reference] building HLA database')
-    
-    seq_out, allele_idx, lengths = complete_records(cDNA, other)
-        
+    log.info('[reference] Building HLA database')
+    seq_out, allele_idx, lengths = complete_records(cDNA, other)  
     write_reference(seq_out, 
                     [gene_set, allele_idx, lengths, gene_length], 
                     hla_fa, hla_idx, hla_p, 
                     'complete')
                     
     
-    log.info('[reference] building partial HLA database')
+    log.info('[reference] Building partial HLA database')
     seq_out, allele_idx, lengths, exon_idx = partial_records(combo, other)
-        
     partial_exons = {allele:exons[allele] for allele in partial_alleles}
     write_reference(seq_out, 
                     [gene_set, allele_idx, exon_idx, lengths, 
                     partial_exons, partial_alleles], 
                     partial_fa, partial_idx, partial_p, 
                     'partial')
+    
+def build_convert(reset=False):
+    '''Creates conversion tables for arcasHLA convert.'''
+    
+    log.info('[reference] Building nomenclature conversion tables.')
+    
+    if reset:
+        commit = hla_dat_version()
+        checkout_version('origin', False)
+    
+    p_group = process_hla_nom(hla_nom_p)
+    g_group = process_hla_nom(hla_nom_g)
+    
+    with open(hla_convert, 'wb') as file:
+        pickle.dump([p_group,g_group], file)
+        
+    if reset:
+        checkout_version(commit, False)
 
 #-------------------------------------------------------------------------------
 #   Main
@@ -468,9 +531,12 @@ if __name__ == '__main__':
     if args.update:
         log.info('[reference] Updating HLA reference')
         checkout_version('origin')
+        build_convert(False)
         build_fasta()
         
+        
     elif args.rebuild:
+        build_convert()
         build_fasta()
         
     elif args.version:
@@ -478,11 +544,13 @@ if __name__ == '__main__':
             sys.exit('[reference] Error: invalid version.')
         checkout_version(versions[args.version])
         build_fasta()
+        build_convert()
         
     elif args.commit:
         check_ref()
         checkout_version(args.commit)
         build_fasta()
+        build_convert()
 
     else:
         check_ref()

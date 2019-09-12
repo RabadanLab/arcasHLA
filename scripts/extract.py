@@ -34,8 +34,8 @@ from os.path import isfile
 from argparse import RawTextHelpFormatter
 from arcas_utilities import *
 
-__version__     = '0.1.1'
-__date__        = '2019-05-07'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
 #   Extract Reads
@@ -218,14 +218,13 @@ if __name__ == '__main__':
     
     datDir = os.path.dirname(os.path.realpath(__file__)) + '/../dat/'
     
+    # Set up log file
     if args.log:
         log_file = args.log
     else:
         log_file = ''.join([outdir,sample,'.extract.log'])
-        
     with open(log_file, 'w'):
         pass
-    
     if args.verbose:
         handlers = [log.FileHandler(log_file), log.StreamHandler()]
         
@@ -248,6 +247,7 @@ if __name__ == '__main__':
              .format( 'paired' if args.paired else 'single'))
     hline()
     
+    # Load names of regions outside chr6 with HLA loci
     with open(datDir + '/info/decoys_alts.p', 'rb') as file:
         alts = pickle.load(file)
     

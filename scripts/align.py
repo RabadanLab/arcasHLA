@@ -43,8 +43,8 @@ from itertools import combinations
 from reference import check_ref, get_exon_combinations
 from arcas_utilities import *
 
-__version__     = '0.1.1'
-__date__        = '2019-05-07'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -69,17 +69,12 @@ def analyze_reads(fqs, paired, reads_file):
     log.info('[alignment] Analyzing read length')
     if paired:
         fq1, fq2 = fqs
-        
-        command = [cat, '<', fq1, awk, '>' , reads_file]
-        run_command(command)
-        
-        command = [cat, '<', fq2, awk, '>>', reads_file]
-        run_command(command)
+        run_command([cat, '<', fq1, awk, '>' , reads_file])
+        run_command([cat, '<', fq2, awk, '>>', reads_file])
         
     else:
         fq = fqs[0]
-        command = [cat, '<', fq, awk, '>', reads_file]
-        run_command(command)
+        run_command([cat, '<', fq, awk, '>', reads_file])
         
     read_lengths = np.genfromtxt(reads_file)
     
@@ -89,7 +84,6 @@ def analyze_reads(fqs, paired, reads_file):
     num = len(read_lengths)
     avg = round(np.mean(read_lengths), 6)
     std = round(np.std(read_lengths), 6)
-    
     
     return num, avg, std
 
@@ -232,6 +226,7 @@ def get_count_stats(eq_idx, gene_length):
     return stats
 
 def alignment_summary(align_stats, partial = False):
+    '''Prints alignment summary to log.'''
     count_unique, count_multi, total, _, _ = align_stats
     log.info('[alignment] Processed {:.0f} reads, {:.0f} pseudoaligned '
              .format(total, count_unique + count_multi)+
@@ -241,7 +236,7 @@ def alignment_summary(align_stats, partial = False):
              .format(count_unique))
 
 def gene_summary(gene_stats):
-    # Print gene abundance information
+    '''Prints gene read count and relative abundance to log.'''
 
     log.info('[alignment] Observed HLA genes:')
 
@@ -253,7 +248,7 @@ def gene_summary(gene_stats):
                  .format(g, a*100, c, e))
 
 def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads, partial = False):
-    
+    '''Runs pseudoalignment and processes output.'''
     paired = True if len(fqs) == 2 else False
         
     count_file = ''.join([temp, 'pseudoalignments.tsv'])
@@ -266,6 +261,8 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
                                  outdir, 
                                  temp,
                                  threads)
+    
+    # Process partial genotyping pseudoalignment
     if partial:
         (commithash, (gene_set, allele_idx, exon_idx, 
             lengths, partial_exons, partial_alleles)) = reference_info
@@ -287,6 +284,7 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
                               align_stats, []]
             pickle.dump(alignment_info, file)
             
+    # Process regular pseudoalignment
     else:
         (commithash,(gene_set, allele_idx, 
              lengths, gene_length)) = reference_info
@@ -309,9 +307,14 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
                               align_stats, gene_stats]
             pickle.dump(alignment_info, file)
             
+        with open(''.join([outdir,sample,'.genes.json']), 'w') as file:
+            json.dump(gene_stats, file)
+            
     return alignment_info
 
 def load_alignment(file, commithash, partial = False):
+    '''Loads previous pseudoalignment.'''
+    
     log.info(f'[alignment] Loading previous alignment %s', file)
     
     with open(file, 'rb') as file:

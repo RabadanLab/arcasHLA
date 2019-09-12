@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-#   genotype.py: genotypes from extracted chromosome 6 reads.
+#   partial.py: genotypes partial alleles from extracted reads.
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
@@ -43,8 +43,8 @@ from arcas_utilities import *
 from align import *
 from genotype import expectation_maximization
 
-__version__     = '0.1.1'
-__date__        = '2019-05-07'
+__version__     = '0.2.0'
+__date__        = '2019-06-26'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -65,13 +65,16 @@ def filter_eqs(complete_genotypes, allele_idx, eq_idx, partial_alleles):
        at least one predicted complete allele.
     '''
     
+    # All alleles returned from arcasHLA genotype
     all_predicted = {allele for alleles in complete_genotypes.values() 
                      for allele in alleles}
     
+    # Find the indices of sequences derived from these alleles
     wanted_indices = {index for index, alleles in allele_idx.items() 
                       if alleles and 
                       (set(alleles) & (partial_alleles | set(all_predicted)))}
     
+    # For each eq group, select only those that include the previous indices
     filtered_eqs = dict()
     for group, eq_list in eq_idx.items():
         filtered_eqs[group] = dict()
@@ -89,6 +92,7 @@ def filter_eqs(complete_genotypes, allele_idx, eq_idx, partial_alleles):
                 filtered.append([indices,count])
             filtered_eqs[group][gene] = filtered
             
+    # Find indices given an allele
     allele_eq = {group:defaultdict(set) for group in filtered_eqs.keys()}
     for group, eq_list in filtered_eqs.items():
         for gene in eq_list:
@@ -427,19 +431,16 @@ if __name__ == '__main__':
     if len(args.file) == 0:
         sys.exit('[genotype] Error: FASTQ or partial_alignment.p file required')
     
+    # Set up directories and log file
     sample = os.path.basename(args.file[0]).split('.')[0]
-    
     outdir = check_path(args.outdir)
     temp = create_temp(args.temp)
-    
     if args.log:
         log_file = args.log
     else:
-        log_file = ''.join([outdir,sample,'.partial_genotype.log'])
-        
+        log_file = ''.join([outdir,sample,'.partial_genotype.log'])    
     with open(log_file, 'w'):
         pass
-    
     if args.verbose:
         handlers = [log.FileHandler(log_file), log.StreamHandler()]
         
@@ -463,10 +464,10 @@ if __name__ == '__main__':
     prior = pd.read_csv(hla_freq, delimiter='\t')
     prior = prior.set_index('allele').to_dict('index')
        
-    # checks if HLA reference exists
+    # Checks if HLA reference exists
     check_ref()
     
-    # loads reference information
+    # Loads reference information
     with open(partial_p, 'rb') as file:
         reference_info = pickle.load(file)
         (commithash, (gene_set, allele_idx, exon_idx, 
@@ -475,7 +476,7 @@ if __name__ == '__main__':
     log.info(f'[log] Reference: %s', commithash)
     hline()  
           
-    # runs transcript assembly if intermediate json not provided
+    # Runs transcript assembly if intermediate json not provided
     if args.file[0].endswith('.partial_alignment.p'):
         alignment_info = load_alignment(args.file[0], commithash, True)
     else:
@@ -483,17 +484,20 @@ if __name__ == '__main__':
                                        reference_info, outdir, temp, 
                                        args.threads, True)
     commithash, eq_idx, _, paired, align_stats, _ = alignment_info
-        
+     
+    # Load alleles from arcasHLA genotype
     with open(args.genotype,'r') as file:
         complete_genotypes = json.load(file)
     
     genes = set(args.genes) & set(complete_genotypes.keys())
     
+    # Filter out alleles not returned by arcasHLA genotype
     eq_idx, allele_eq = filter_eqs(complete_genotypes, allele_idx, 
                                    eq_idx, partial_alleles)
     
     partial_results = dict()
 
+    # For each HLA locus, check for possible partial alleles
     for gene in sorted(genes):
         hline()
         log.info(f'[genotype] Partial genotyping HLA-{gene}')
