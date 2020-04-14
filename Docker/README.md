@@ -9,7 +9,7 @@ Installs up-to-date versions of arcasHLA and all dependencies:
 - [bedtools v2.29.1](http://bedtools.readthedocs.io/)
 - [pigz v2.3.1](https://zlib.net/pigz/)
 - [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
-- Python 3
+- Python 3.6
 - [Biopython](https://biopython.org/wiki/Download)
 - NumPy
 - SciPy
@@ -21,7 +21,6 @@ In order to use this arcasHLA container, install Docker and build in this direct
 docker build -t <image_name> .
 ```
 ### Run ###
-```
 Interactively ("image_name" is as above):
 ```
 docker run -it --entrypoint bash -v <path/to/files>:<docker/path/to/files> <image_name>
