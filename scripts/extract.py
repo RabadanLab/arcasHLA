@@ -98,7 +98,7 @@ def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
         if paired: command.append('-f 12')
         else: command.append('-f 4')
         
-        command.extend([bam, chrom, '>>', hla_filtered])
+        command.extend([bam, '>>', hla_filtered])
         run_command(command, message)
     
     # Check for alts in header and extract reads if present
