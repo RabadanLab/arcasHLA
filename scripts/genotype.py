@@ -497,7 +497,7 @@ def arg_check_threshold(parser, arg):
         value = float(arg)
         if value > 1 or value < 0:
             parser.error('The threshold must be between 0 and 1.')
-        return arg
+        return value
     except:
         parser.error('The threshold is invalid.')
     
