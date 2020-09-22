@@ -426,6 +426,18 @@ if __name__ == '__main__':
                         '--verbose', 
                         action = 'count',
                         default=False)
+
+    parser.add_argument('-l',
+                        '--avg', 
+                        help='Estimated average fragment length ' +
+                             'for single-end reads\n  default: 200\n\n',
+                        default=200)
+
+    parser.add_argument('-s',
+                        '--std', 
+                        help='Estimated standard deviation of fragment length ' +
+                             'for single-end reads\n  default: 20\n\n',
+                        default=20)
     args = parser.parse_args()
     
     if len(args.file) == 0:
@@ -482,7 +494,7 @@ if __name__ == '__main__':
     else:
         alignment_info = get_alignment(args.file, sample, partial_idx,
                                        reference_info, outdir, temp, 
-                                       args.threads, True)
+                                       args.threads, True, args.avg, args.std)
     commithash, eq_idx, _, paired, align_stats, _ = alignment_info
      
     # Load alleles from arcasHLA genotype
