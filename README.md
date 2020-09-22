@@ -93,7 +93,7 @@ Output: `sample.1.fq.gz`, `sample.2.fq.gz`
 ### Genotype ###
 
 #### From FASTQs ####
-To predict the most likely genotype (no partial alleles), input the FASTQs produced by `extract`.
+To predict the most likely genotype (no partial alleles), input the FASTQs produced by `extract` or the original FASTQs with all reads.
 
 ```
 arcasHLA genotype [options] /path/to/sample.1.fq.gz /path/to/sample.2.fq.gz
