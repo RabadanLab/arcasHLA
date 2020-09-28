@@ -60,13 +60,11 @@ def pseudoalign(fqs, sample, paired, reference, outdir, temp, threads, avg, std)
     '''Calls Kallisto to pseudoalign reads.'''
 
     command = ['kallisto pseudo -i', reference, '-t', threads, '-o', temp]
-        
-    if paired:
-        command.extend([fqs[0], fqs[1]])
-    else:
-        fq = fqs[0]
-        command.extend(['--single -l', str(avg), '-s', str(std), fq])
-        
+
+    if not paired:
+        command.extend(['--single -l', str(avg), '-s', str(std)])
+
+    command.extend(fqs)
     run_command(command, '[alignment] Pseudoaligning with Kallisto: ')
 
            
