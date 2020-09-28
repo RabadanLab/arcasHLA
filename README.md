@@ -93,7 +93,7 @@ Output: `sample.1.fq.gz`, `sample.2.fq.gz`
 ### Genotype ###
 
 #### From FASTQs ####
-To predict the most likely genotype (no partial alleles), input the FASTQs produced by `extract`.
+To predict the most likely genotype (no partial alleles), input the FASTQs produced by `extract` or the original FASTQs with all reads (experimental - use with caution).
 
 ```
 arcasHLA genotype [options] /path/to/sample.1.fq.gz /path/to/sample.2.fq.gz
@@ -131,7 +131,11 @@ arcasHLA genotype [options] /path/to/sample.alignment.p
 - `--temp DIR`        : temp directory (default: `/tmp`)                                                                              
 - `--keep_files`      : keep intermediate files (default: False)                                                                      
 - `-t, --threads INT` : number of threads (default: 1)                                                                                
-- `-v, --verbose`     : verbosity (default: False)   
+- `-v, --verbose`     : verbosity (default: False)
+- `--single`          : Include flag to indicate if single-end FASTQs (paired-end if missing)
+- `-l, --avg`         : Estimated average fragment length for single-end reads (default: 200)
+- `-s, --std`         : Estimated standard deviation of fragment length (default: 20)
+
 
 ### Genotype - partial (optional) ###
 Following genotyping, partial alleles can be predicted. This requires aligning the reads to an alternate, partial allele reference. The `sample.genotype.json` file from the previous step is required.
