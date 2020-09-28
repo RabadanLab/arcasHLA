@@ -43,8 +43,8 @@ from arcas_utilities import *
 from align import *
 from genotype import expectation_maximization
 
-__version__     = '0.2.0'
-__date__        = '2019-06-26'
+__version__     = '0.3.0'
+__date__        = '2020-09-28'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -438,6 +438,11 @@ if __name__ == '__main__':
                         help='Estimated standard deviation of fragment length ' +
                              'for single-end reads\n  default: 20\n\n',
                         default=20)
+
+    parser.add_argument('--single',
+                        type=bool,
+                        help='Are reads single-end?\n\n')
+
     args = parser.parse_args()
     
     if len(args.file) == 0:
@@ -494,7 +499,7 @@ if __name__ == '__main__':
     else:
         alignment_info = get_alignment(args.file, sample, partial_idx,
                                        reference_info, outdir, temp, 
-                                       args.threads, True, args.avg, args.std)
+                                       args.threads, True, args.single, args.avg, args.std)
     commithash, eq_idx, _, paired, align_stats, _ = alignment_info
      
     # Load alleles from arcasHLA genotype

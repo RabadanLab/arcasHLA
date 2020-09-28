@@ -43,8 +43,8 @@ from itertools import combinations
 from reference import check_ref, get_exon_combinations
 from arcas_utilities import *
 
-__version__     = '0.2.0'
-__date__        = '2019-06-26'
+__version__     = '0.3.0'
+__date__        = '2020-09-28'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -58,9 +58,6 @@ rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 
 def pseudoalign(fqs, sample, paired, reference, outdir, temp, threads, avg, std):
     '''Calls Kallisto to pseudoalign reads.'''
-    
-    # Kallisto fails if std used for single-end is 0
-    std = max(std, 1e-6)
 
     command = ['kallisto pseudo -i', reference, '-t', threads, '-o', temp]
         
@@ -212,9 +209,9 @@ def gene_summary(gene_stats):
         log.info('\t\tHLA-{: <6}    {: >8.2f}%    {: >10.0f}    {: >7.0f}'
                  .format(g, a*100, c, e))
 
-def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads, partial = False, avg = 200, std = 20):
+def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads, single, partial = False, avg = 200, std = 20):
     '''Runs pseudoalignment and processes output.'''
-    paired = True if len(fqs) == 2 else False
+    paired = not single
         
     count_file = ''.join([temp, 'pseudoalignments.tsv'])
     eq_file = ''.join([temp, 'pseudoalignments.ec'])
