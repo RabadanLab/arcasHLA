@@ -43,8 +43,8 @@ from itertools import combinations
 from reference import check_ref, get_exon_combinations
 from arcas_utilities import *
 
-__version__     = '0.2.0'
-__date__        = '2019-06-26'
+__version__     = '0.3.0'
+__date__        = '2020-09-28'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -56,58 +56,18 @@ rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 # Process and align FASTQ input
 #-----------------------------------------------------------------------------
 
-def analyze_reads(fqs, paired, reads_file):
-    '''Analyzes read length for single-end sampled, required by Kallisto.'''
-    
-    awk = "| awk '{if(NR%4==2) print length($1)}'"
-    
-    if fqs[0].endswith('.gz'):
-        cat = 'zcat'
-    else:
-        cat = 'cat'
-    
-    log.info('[alignment] Analyzing read length')
-    if paired:
-        fq1, fq2 = fqs
-        run_command([cat, '<', fq1, awk, '>' , reads_file])
-        run_command([cat, '<', fq2, awk, '>>', reads_file])
-        
-    else:
-        fq = fqs[0]
-        run_command([cat, '<', fq, awk, '>', reads_file])
-        
-    read_lengths = np.genfromtxt(reads_file)
-    
-    if len(read_lengths) == 0:
-        sys.exit('[genotype] Error: FASTQ files are empty; check arcasHLA extract for issues.')
-    
-    num = len(read_lengths)
-    avg = round(np.mean(read_lengths), 6)
-    std = round(np.std(read_lengths), 6)
-    
-    return num, avg, std
-
-def pseudoalign(fqs, sample, paired, reference, outdir, temp, threads):
+def pseudoalign(fqs, sample, paired, reference, outdir, temp, threads, avg, std):
     '''Calls Kallisto to pseudoalign reads.'''
-    
-    # Get read length stats
-    reads_file = ''.join([temp, sample, '.reads.txt'])
-    num, avg, std = analyze_reads(fqs, paired, reads_file)
-    
-    # Kallisto fails if std used for single-end is 0
-    std = max(std, 1e-6)
 
     command = ['kallisto pseudo -i', reference, '-t', threads, '-o', temp]
-        
-    if paired:
-        command.extend([fqs[0], fqs[1]])
-    else:
-        fq = fqs[0]
-        command.extend(['--single -l', str(avg), '-s', str(std), fq])
-        
+
+    if not paired:
+        command.extend(['--single -l', str(avg), '-s', str(std)])
+
+    command.extend(fqs)
     run_command(command, '[alignment] Pseudoaligning with Kallisto: ')
+
            
-    return num, avg, std
 
 #-----------------------------------------------------------------------------
 # Process transcript assembly output
@@ -227,9 +187,9 @@ def get_count_stats(eq_idx, gene_length):
 
 def alignment_summary(align_stats, partial = False):
     '''Prints alignment summary to log.'''
-    count_unique, count_multi, total, _, _ = align_stats
-    log.info('[alignment] Processed {:.0f} reads, {:.0f} pseudoaligned '
-             .format(total, count_unique + count_multi)+
+    count_unique, count_multi, _, _ = align_stats
+    log.info('[alignment] Pseudoaligned {:.0f} reads '
+             .format(count_unique + count_multi)+
              'to HLA reference')
               
     log.info('[alignment] {:.0f} reads mapped to a single HLA gene'
@@ -247,20 +207,22 @@ def gene_summary(gene_stats):
         log.info('\t\tHLA-{: <6}    {: >8.2f}%    {: >10.0f}    {: >7.0f}'
                  .format(g, a*100, c, e))
 
-def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads, partial = False):
+def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads, single, partial = False, avg = 200, std = 20):
     '''Runs pseudoalignment and processes output.'''
-    paired = True if len(fqs) == 2 else False
+    paired = not single
         
     count_file = ''.join([temp, 'pseudoalignments.tsv'])
     eq_file = ''.join([temp, 'pseudoalignments.ec'])
 
-    total, avg, std = pseudoalign(fqs,
-                                 sample,
-                                 paired,
-                                 reference,
-                                 outdir, 
-                                 temp,
-                                 threads)
+    pseudoalign(fqs,
+                sample,
+                paired,
+                reference,
+                outdir,
+                temp,
+                threads,
+                avg,
+                std)
     
     # Process partial genotyping pseudoalignment
     if partial:
@@ -275,7 +237,7 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
                                                lengths,
                                                exon_idx,
                                                exon_combos)
-        align_stats.extend([total, avg, std])
+        align_stats.extend([avg, std])
         
         alignment_summary(align_stats, True)
         
@@ -295,7 +257,7 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
                                                         allele_idx, 
                                                         lengths)
         
-        align_stats.extend([total, avg, std])
+        align_stats.extend([avg, std])
         
         alignment_summary(align_stats)
         
