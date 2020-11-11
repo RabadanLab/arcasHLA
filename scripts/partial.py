@@ -429,19 +429,22 @@ if __name__ == '__main__':
 
     parser.add_argument('-l',
                         '--avg', 
+                        type=int,
                         help='Estimated average fragment length ' +
-                             'for single-end reads\n  default: 200\n\n',
+                                'for single-end reads\n  default: 200\n\n',
                         default=200)
 
     parser.add_argument('-s',
                         '--std', 
+                        type=int,
                         help='Estimated standard deviation of fragment length ' +
                              'for single-end reads\n  default: 20\n\n',
                         default=20)
 
     parser.add_argument('--single',
-                        type=bool,
-                        help='Are reads single-end?\n\n')
+                        action='store_true',
+                        help='Include flag if single-end reads. Default is paired-end.\n\n',
+                        default=False)
 
     args = parser.parse_args()
     
