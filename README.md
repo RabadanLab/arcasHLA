@@ -8,8 +8,6 @@ arcasHLA performs high resolution genotyping for HLA class I and class II genes 
 ```
 git clone https://github.com/roseorenbuch/arcasHLA.git
 cd arcasHLA
-wget https://www.dropbox.com/s/pcmwc4o1dxw7owk/arcasHLA-quant_reference.zip
-unzip arcasHLA-quant_reference.zip
 ```
 ## Build Customized References ##
 #### Input: arcasHLA genotype.json ####
