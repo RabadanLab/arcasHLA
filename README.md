@@ -49,13 +49,13 @@ Partial typing:
 ```
 Expected output in `test/output/test.partial_genotype.json`:
 ```
-{"A": ["A*01:01:01", "A*03:01:01"], 
- "B": ["B*07:02:01", "B*39:39:01"],
- "C": ["C*08:01:01", "C*01:02:01"], 
- "DPB1": ["DPB1*14:01:01", "DPB1*02:01:02"], 
- "DQA1": ["DQA1*02:01:01", "DQA1*05:03"], 
+{"A": ["A*03:01:01", "A*01:01:01"],
+ "B": ["B*39:39:01", "B*07:02:01"],
+ "C": ["C*01:02:01", "C*08:01:01"],
+ "DPB1": ["DPB1*02:01:02", "DPB1*14:01:01"],
+ "DQA1": ["DQA1*05:03:01", "DQA1*02:01:01"],
  "DQB1": ["DQB1*06:04:01", "DQB1*02:02:01"],
- "DRB1": ["DRB1*03:02:01", "DRB1*14:02:01"]}
+ "DRB1": ["DRB1*03:02:01", "DRB1*10:01:01"]}
 ```
 Remember to update the HLA reference using the following command.
 ```
