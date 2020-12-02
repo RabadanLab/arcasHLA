@@ -86,7 +86,7 @@ def fetch_hla_dat():
     if isdir(IMGTHLA):
         run_command(['rm', '-rf', IMGTHLA])
         
-    command = ['git', 'lfs clone', IMGTHLA_git, IMGTHLA]
+    command = ['git', 'clone', IMGTHLA_git, IMGTHLA]
     run_command(command,
                 '[reference] Cloning IMGT/HLA database:')
     
@@ -95,8 +95,10 @@ def checkout_version(commithash, verbose = True):
     
     if not isfile(hla_dat):
         fetch_hla_dat()
+    else:
+        run_command(['git', 'clean', '-fd', IMGTHLA], 'clean')
 
-    command = ['git', '-C', IMGTHLA, 'lfs checkout', commithash]
+    command = ['git', '-C', IMGTHLA, 'checkout', commithash]
     if verbose:
         run_command(command, '[reference] Checking out IMGT/HLA:')
     else:
