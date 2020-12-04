@@ -95,6 +95,8 @@ def checkout_version(commithash):
     
     if not isfile(hla_dat):
         fetch_hla_dat()
+    else:
+        run_command(['git', 'clean', '-fd', IMGTHLA], 'clean')
 
     command = ['git', '-C', IMGTHLA, 'checkout', commithash]
     run_command(command,'[reference] checking out IMGT/HLA:')
