@@ -60,6 +60,43 @@ def arg_check_files(parser, arg):
         elif not (file.endswith('alignment.p') or file.endswith('.fq.gz') or file.endswith('.fastq.gz') or file.endswith('.tsv') or file.endswith('.json')):
             parser.error('The format of %s is invalid.' %file)
         return arg
+
+def analyze_reads(fqs, paired, reads_file):
+    '''Analyzes read length for single-end sampled, required by Kallisto.'''
+    
+    awk = "| awk '{if(NR%4==2) print length($1)}'"
+    
+    if fqs[0].endswith('.gz'):
+        cat = 'zcat'
+    else:
+        cat = 'cat'
+    
+    log.info('[alignment] Analyzing read length')
+    if paired:
+        fq1, fq2 = fqs
+        
+        command = [cat, '<', fq1, awk, '>' , reads_file]
+        run_command(command)
+        
+        command = [cat, '<', fq2, awk, '>>', reads_file]
+        run_command(command)
+        
+    else:
+        fq = fqs[0]
+        command = [cat, '<', fq, awk, '>', reads_file]
+        run_command(command)
+        
+    read_lengths = np.genfromtxt(reads_file)
+    
+    if len(read_lengths) == 0:
+        sys.exit('[genotype] Error: FASTQ files are empty; check arcasHLA extract for issues.')
+    
+    num = len(read_lengths)
+    avg = round(np.mean(read_lengths), 6)
+    std = round(np.std(read_lengths), 6)
+    
+    
+    return num, avg, std
     
 if __name__ == '__main__':
     
@@ -159,14 +196,14 @@ if __name__ == '__main__':
 
         reads_file = ''.join([temp, sample, '.reads.txt'])
         if not paired:
-            num, avg, std = analyze_reads(args.file, paired, reads_file, False)
+            num, avg, std = analyze_reads(args.file, paired, reads_file)
             if std == 0.0: std = .00000001
 
 
         command = ['kallisto quant', '-i', indv_idx, '-o', temp, '-t', args.threads]
 
         if len(args.file) == 1:
-            command.extend('--single -l', str(avg), '-s', str(std))
+            command.extend(['--single -l', str(avg), '-s', str(std)])
 
         command.extend(args.file)
 
