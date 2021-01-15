@@ -502,7 +502,7 @@ if __name__ == '__main__':
     else:
         alignment_info = get_alignment(args.file, sample, partial_idx,
                                        reference_info, outdir, temp, 
-                                       args.threads, True, args.single, args.avg, args.std)
+                                       args.threads, args.single, True, args.avg, args.std)
     commithash, eq_idx, _, paired, align_stats, _ = alignment_info
      
     # Load alleles from arcasHLA genotype
