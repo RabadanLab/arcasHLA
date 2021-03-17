@@ -66,14 +66,12 @@ RUN make
 RUN ln -s /usr/bin/bedtools2/bin/bedtools /usr/bin/bedtools
 
 # git lfs
-RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-RUN apt-get install -y git-lfs
-RUN git lfs install --system --skip-repo
+#RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+#RUN apt-get install -y git-lfs
+#RUN git lfs install --system --skip-repo
 
 # install arcasHLA
 WORKDIR /home/
 RUN git clone https://github.com/RabadanLab/arcasHLA.git arcasHLA-master
 
 ENV PATH="${PATH}:/home/arcasHLA-master/"
-
-RUN arcasHLA reference --update
