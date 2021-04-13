@@ -43,8 +43,8 @@ from itertools import combinations
 from reference import check_ref, get_exon_combinations
 from arcas_utilities import *
 
-__version__     = '0.3.0'
-__date__        = '2020-09-28'
+__version__     = '0.2.5'
+__date__        = '2021-04-12'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -170,7 +170,7 @@ def process_partial_counts(count_file, eq_file, allele_idx, allele_lengths,
 def get_count_stats(eq_idx, gene_length):
     '''Returns counts and relative abundance of genes.'''
     stats = {gene:[0,0,0.] for gene in eq_idx}
-    
+
     abundances = defaultdict(float)
     for gene, eqs in eq_idx.items():
         count = sum([count for eq,count in eqs])
@@ -228,6 +228,14 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
     if partial:
         (commithash, (gene_set, allele_idx, exon_idx, 
             lengths, partial_exons, partial_alleles)) = reference_info
+
+        gene_set = set(gene_set)
+        allele_idx = json.loads(allele_idx)
+        exon_idx = json.loads(exon_idx)
+        lengths = json.loads(lengths)
+        lengths = dict([int(a), int(x)] for a, x in lengths.items())
+        partial_exons = json.loads(partial_exons)
+        partial_alleles = set(partial_alleles)
         
         exon_combos = get_exon_combinations() 
         
@@ -248,9 +256,16 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
             
     # Process regular pseudoalignment
     else:
-        (commithash,(gene_set, allele_idx, 
+        (commithash, (gene_set, allele_idx,
              lengths, gene_length)) = reference_info
-        
+
+        gene_set = set(gene_set)
+        allele_idx = json.loads(allele_idx)
+        gene_length = json.loads(gene_length)
+        gene_length = dict([a, int(x)] for a, x in gene_length.items())
+        lengths = json.loads(lengths)
+        lengths = dict([int(a), int(x)] for a, x in lengths.items())
+
         eq_idx, allele_eq, align_stats = process_counts(count_file,
                                                         eq_file, 
                                                         gene_set, 
@@ -264,9 +279,10 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
         gene_stats = get_count_stats(eq_idx, gene_length)
         gene_summary(gene_stats)
 
+        #todo, switch to json?
         with open(''.join([outdir, sample, '.alignment.p']), 'wb') as file:
-            alignment_info = [commithash, eq_idx, allele_eq, paired, 
-                              align_stats, gene_stats]
+            alignment_info = [commithash, eq_idx, allele_eq, paired,
+                    align_stats, gene_stats]
             pickle.dump(alignment_info, file)
             
         with open(''.join([outdir,sample,'.genes.json']), 'w') as file:
