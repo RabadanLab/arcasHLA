@@ -44,8 +44,8 @@ from reference import check_ref
 from arcas_utilities import *
 from align import *
 
-__version__     = '0.3.0'
-__date__        = '2020-09-28'
+__version__     = '0.2.5'
+__date__        = '2021-04-12'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -53,10 +53,11 @@ __date__        = '2020-09-28'
 
 rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 
-hla_p      = rootDir + 'dat/ref/hla.p'
+#hla_p      = rootDir + 'dat/ref/hla.p'
+hla_json   = rootDir + 'dat/ref/hla.p.json'
 hla_idx    = rootDir + 'dat/ref/hla.idx'
 hla_freq   = rootDir + 'dat/info/hla_freq.tsv'
-parameters = rootDir + 'dat/info/parameters.p'
+parameters_json = rootDir + 'dat/info/parameters.json'
 
 #-----------------------------------------------------------------------------
 # Genotype
@@ -404,6 +405,10 @@ def genotype_gene(gene, gene_count, eqs, lengths, allele_idx, population,
     if gene not in {'A', 'B', 'C', 'DRB1', 'DQB1', 'DQA1'}:
         population = None
 
+    allele_idx = json.loads(allele_idx)
+    lengths = json.loads(lengths)
+    lengths = dict([a, int(x)] for a, x in lengths.items())
+
     em_results = expectation_maximization(eqs, 
                                           lengths, 
                                           allele_idx, 
@@ -500,11 +505,13 @@ def arg_check_threshold(parser, arg):
         return value
     except:
         parser.error('The threshold is invalid.')
-    
+
 if __name__ == '__main__':
     
-    with open(parameters, 'rb') as file:
-        genes, populations, _ = pickle.load(file)
+    with open(parameters_json, 'r') as file:
+        genes, populations, _ = json.load(file)
+        genes = set(genes)
+        populations = set(populations)
     
     parser = argparse.ArgumentParser(prog='arcasHLA genotype',
                                  usage='%(prog)s [options] FASTQs ' + 
@@ -694,8 +701,12 @@ if __name__ == '__main__':
     check_ref()
     
     # Loads reference information
-    with open(hla_p, 'rb') as file:
-        reference_info = pickle.load(file)
+    #with open(hla_p, 'rb') as file:
+    #    reference_info = pickle.load(file)
+    #    (commithash,(gene_set, allele_idx, 
+    #     lengths, gene_length)) = reference_info
+    with open(hla_json, 'r') as file:
+        reference_info = json.load(file)
         (commithash,(gene_set, allele_idx, 
          lengths, gene_length)) = reference_info
         
