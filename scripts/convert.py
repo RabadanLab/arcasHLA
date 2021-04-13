@@ -45,7 +45,8 @@ __date__        = '2019-06-26'
 
 rootDir = dirname(realpath(__file__)) + '/../'
 
-hla_convert = rootDir + 'dat/ref/hla.convert.p'
+#hla_convert = rootDir + 'dat/ref/hla.convert.p'
+hla_convert_json = rootDir + 'dat/ref/hla.convert.json'
 
 #-------------------------------------------------------------------------------
         
@@ -153,8 +154,10 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    p_group, g_group = pickle.load(open(hla_convert,'rb'))
-    
+    #p_group, g_group = pickle.load(open(hla_convert,'rb'))
+    #to do, test this
+    with open(hla_convert_json, 'r') as file:
+        p_group,g_group = json.load(file)
     
     # Check input resolution
     accepted_fields = {'1','2','3','4'}
