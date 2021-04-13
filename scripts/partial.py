@@ -43,8 +43,8 @@ from arcas_utilities import *
 from align import *
 from genotype import expectation_maximization
 
-__version__     = '0.3.0'
-__date__        = '2020-09-28'
+__version__     = '0.2.5'
+__date__        = '2021-04-12'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -52,7 +52,8 @@ __date__        = '2020-09-28'
 
 rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 
-partial_p       = rootDir + 'dat/ref/hla_partial.p'
+#partial_p       = rootDir + 'dat/ref/hla_partial.p'
+partial_json       = rootDir + 'dat/ref/hla_partial.p.json'
 partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
 hla_freq        = rootDir + 'dat/info/hla_freq.tsv'
 
@@ -315,8 +316,10 @@ def arg_check_threshold(parser, arg):
 
 if __name__ == '__main__':
     
-    with open(rootDir + 'dat/info/parameters.p', 'rb') as file:
-        genes, populations, databases = pickle.load(file)
+    with open(rootDir + 'dat/info/parameters.json', 'r') as file:
+        genes, populations, databases = json.load(file)
+        genes = set(genes)
+        populations = set(populations)
     
     parser = argparse.ArgumentParser(prog='arcasHLA partial',
                              usage='%(prog)s [options] -G genotype.json FASTQ',
@@ -488,10 +491,21 @@ if __name__ == '__main__':
     check_ref()
     
     # Loads reference information
-    with open(partial_p, 'rb') as file:
-        reference_info = pickle.load(file)
+    #with open(partial_p, 'rb') as file:
+    #    reference_info = pickle.load(file)
+    #    (commithash, (gene_set, allele_idx, exon_idx, 
+    #        lengths, partial_exons, partial_alleles)) = reference_info
+    with open(partial_json, 'r') as file:
+        reference_info = json.load(file)
         (commithash, (gene_set, allele_idx, exon_idx, 
             lengths, partial_exons, partial_alleles)) = reference_info
+        gene_set = set(gene_set)
+        allele_idx = json.loads(allele_idx)
+        exon_idx = json.loads(exon_idx)
+        lengths = json.loads(lengths)
+        lengths = dict([a, int(x)] for a, x in lengths.items())
+        partial_exons = json.loads(partial_exons)
+        partial_alleles = set(partial_alleles)
         
     log.info(f'[log] Reference: %s', commithash)
     hline()  
