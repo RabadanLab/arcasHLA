@@ -25,9 +25,11 @@
 
 import sys
 import re
-import pickle
+import json
+#import pickle
 import argparse
 import logging as log
+import numpy as np
 
 from argparse import RawTextHelpFormatter
 from os.path import isfile, isdir, dirname, realpath
@@ -43,8 +45,8 @@ from Bio.SeqRecord import SeqRecord
 
 from arcas_utilities import *
 
-__version__     = '0.2.0'
-__date__        = '2019-06-26'
+__version__     = '0.2.5'
+__date__        = '2021-04-12'
 
 #-------------------------------------------------------------------------------
 #   Paths and fileames
@@ -57,14 +59,18 @@ IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
 hla_dat         = rootDir + 'dat/IMGTHLA/hla.dat'
 hla_nom_g       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_g.txt'
 hla_nom_p       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_p.txt'
-hla_convert     = rootDir + 'dat/ref/hla.convert.p'
+#hla_convert    = rootDir + 'dat/ref/hla.convert.p'
+hla_convert_json = rootDir + 'dat/ref/hla.convert.json'
 hla_fa          = rootDir + 'dat/ref/hla.fasta'
 partial_fa      = rootDir + 'dat/ref/hla_partial.fasta'
-hla_p           = rootDir + 'dat/ref/hla.p'
-partial_p       = rootDir + 'dat/ref/hla_partial.p'
+#hla_p           = rootDir + 'dat/ref/hla.p'
+#partial_p       = rootDir + 'dat/ref/hla_partial.p'
+hla_json        = rootDir + 'dat/ref/hla.p.json'
+partial_json    = rootDir + 'dat/ref/hla_partial.p.json'
 hla_idx         = rootDir + 'dat/ref/hla.idx'
 partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
-parameters      = rootDir + 'dat/info/parameters.p'
+#parameters      = rootDir + 'dat/info/parameters.p'
+parameters_json = rootDir + 'dat/info/parameters.json'
 
 #-------------------------------------------------------------------------------
 #   Fetch and process IMGTHLA database
@@ -95,8 +101,6 @@ def checkout_version(commithash, verbose = True):
     
     if not isfile(hla_dat):
         fetch_hla_dat()
-    else:
-        run_command(['git', 'clean', '-fd', IMGTHLA], 'clean')
 
     command = ['git', '-C', IMGTHLA, 'checkout', commithash]
     if verbose:
@@ -271,8 +275,22 @@ def write_reference(sequences, info, fasta, idx, database, type):
         SeqIO.write(sequences, file, 'fasta')
         
     commithash = hla_dat_version()
-    with open(database,'wb') as file:
-        pickle.dump([commithash,info],file)
+    #with open(database,'wb') as file:
+    #    pickle.dump([commithash,info],file)
+    with open(database, 'w') as file:
+        if(len(info) == 4):
+            json.dump([commithash,[list(info[0]), 
+                json.dumps(info[1], cls=NumpyEncoder),
+                json.dumps(info[2], cls=NumpyEncoder),
+                json.dumps(info[3], cls=NumpyEncoder)]],
+                file)
+        if(len(info) == 6):
+            json.dump([commithash,[list(info[0]), 
+                json.dumps(info[1], cls=NumpyEncoder),
+                json.dumps(info[2], cls=NumpyEncoder),
+                json.dumps(info[3], cls=NumpyEncoder),
+                json.dumps(info[4], cls=NumpyEncoder),list(info[5])]],
+                file)
 
     run_command(['kallisto', 'index', '-i', idx, fasta] ,
                 '[reference] indexing ' + type + ' reference with Kallisto:')
@@ -436,10 +454,11 @@ def build_fasta():
     gene_length = {g:get_mode(lengths) for g, lengths in gene_length.items()}
     
     log.info('[reference] Building HLA database')
-    seq_out, allele_idx, lengths = complete_records(cDNA, other)  
+    seq_out, allele_idx, lengths = complete_records(cDNA, other)   
     write_reference(seq_out, 
                     [gene_set, allele_idx, lengths, gene_length], 
-                    hla_fa, hla_idx, hla_p, 
+                    #hla_fa, hla_idx, hla_p, 
+                    hla_fa, hla_idx, hla_json, 
                     'complete')
                     
     
@@ -449,7 +468,8 @@ def build_fasta():
     write_reference(seq_out, 
                     [gene_set, allele_idx, exon_idx, lengths, 
                     partial_exons, partial_alleles], 
-                    partial_fa, partial_idx, partial_p, 
+                    #partial_fa, partial_idx, partial_p, 
+                    partial_fa, partial_idx, partial_json, 
                     'partial')
     
 def build_convert(reset=False):
@@ -464,11 +484,20 @@ def build_convert(reset=False):
     p_group = process_hla_nom(hla_nom_p)
     g_group = process_hla_nom(hla_nom_g)
     
-    with open(hla_convert, 'wb') as file:
-        pickle.dump([p_group,g_group], file)
+    #with open(hla_convert, 'wb') as file:
+    #    pickle.dump([p_group,g_group], file)
+    # todo, test this:
+    with open(hla_convert_json, 'w') as file:
+        json.dump([p_group,g_group],file)
         
     if reset:
         checkout_version(commit, False)
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.int64):
+            return int(obj)
+        return json.JSONEncoder.default(self, obj)
 
 #-------------------------------------------------------------------------------
 #   Main
@@ -476,8 +505,13 @@ def build_convert(reset=False):
     
 if __name__ == '__main__':
 
-    with open(parameters, 'rb') as file:
-        _, _, versions = pickle.load(file)
+    #with open(parameters, 'rb') as file:
+    #    _, _, versions = pickle.load(file)
+    #    temp1, temp2, versions = pickle.load(file)
+    #with open(parameters_json, 'w') as file:
+    #    json.dump([list(temp1),list(temp2),versions],file)
+    with open(parameters_json, 'r') as file:
+        _, _, versions = json.load(file)
 
     parser = argparse.ArgumentParser(prog='arcasHLA reference',
                                      usage='%(prog)s [options]',
