@@ -4,7 +4,6 @@ arcasHLA performs high resolution genotyping for HLA class I and class II genes 
 
 ### Dependencies ###
 arcasHLA requires the following utilities:
-- [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
 - coreutils
 
 Make sure the following programs are in your `PATH`:
@@ -15,7 +14,7 @@ Make sure the following programs are in your `PATH`:
 - Python 3.6
 
 arcasHLA requires the following Python modules:
-- [Biopython](https://biopython.org/wiki/Download)
+- [Biopython v1.77 (or lower)](https://biopython.org/wiki/Download)
 - NumPy
 - SciPy
 - Pandas
@@ -27,7 +26,7 @@ In order to test arcasHLA partial typing, we need to roll back the reference to 
 ```
 Extract reads:
 ```
-./arcasHLA extract test/test.bam -o test/output --paired -t 8 -v
+./arcasHLA extract test/test.bam -o test/output -t 8 -v
 ```
 Genotyping (no partial alleles):
 ```
@@ -81,7 +80,7 @@ arcasHLA takes sorted BAM files and extracts chromosome 6 reads and related HLA 
 Output: `sample.1.fq.gz`, `sample.2.fq.gz`
 
 #### Options: ####
-- `--paired`          : paired-end reads (default: False)                                                                             
+- `--single`          : single-end reads (default: False)                                                                             
 - `--unmapped`        : include unmapped reads, recommended if the aligner used marks multimapping reads as unmapped (default: False) 
 - `--log FILE`        : log file for run summary (default: sample.extract.log)                                                        
 - `--o, --outdir DIR` : output directory (default: `.`)                                                                               
