@@ -175,9 +175,9 @@ if __name__ == '__main__':
                     default=None, 
                     metavar='')
                         
-    parser.add_argument('--paired', 
+    parser.add_argument('--single', 
                         action = 'count',
-                        help='paired-end reads\n  default: False\n\n',
+                        help='single-end reads\n  default: False\n\n',
                         default=False)    
     
     parser.add_argument('--unmapped', 
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     log.info(f'[log] Sample: %s', sample)
     log.info(f'[log] Input file: %s', args.bam)
     log.info('[log] Read type: {}-end'
-             .format( 'paired' if args.paired else 'single'))
+             .format( 'paired' if not args.single else 'single'))
     hline()
     
     # Load names of regions outside chr6 with HLA loci
@@ -256,7 +256,7 @@ if __name__ == '__main__':
 
     extract_reads(args.bam,
                   outdir, 
-                  args.paired,
+                  not args.single,
                   args.unmapped,
                   alts,
                   temp,
