@@ -26,6 +26,7 @@ import os
 import sys
 import re
 import pickle
+import json
 import argparse
 import logging as log
 
@@ -34,8 +35,8 @@ from os.path import isfile
 from argparse import RawTextHelpFormatter
 from arcas_utilities import *
 
-__version__     = '0.2.0'
-__date__        = '2019-06-26'
+__version__     = '0.2.5'
+__date__        = '2021-04-12'
 
 #-------------------------------------------------------------------------------
 #   Extract Reads
@@ -248,9 +249,11 @@ if __name__ == '__main__':
     hline()
     
     # Load names of regions outside chr6 with HLA loci
-    with open(datDir + '/info/decoys_alts.p', 'rb') as file:
-        alts = pickle.load(file)
-    
+    #with open(datDir + '/info/decoys_alts.p', 'rb') as file:
+    #    alts = pickle.load(file)
+    with open(datDir + 'info/decoys_alts.json', 'r') as file:
+        alts = json.load(file)
+
     extract_reads(args.bam,
                   outdir, 
                   args.paired,
