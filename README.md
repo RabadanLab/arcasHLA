@@ -4,6 +4,7 @@ arcasHLA performs high resolution genotyping for HLA class I and class II genes 
 
 ### Dependencies ###
 arcasHLA requires the following utilities:
+- [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
 - coreutils
 
 Make sure the following programs are in your `PATH`:
