@@ -60,7 +60,16 @@ def process_genotype(json_files, indir, outdir, run, suffix):
     
     genotypes = dict()
     for file in json_files:
-        sample = file.split('.')[0]
+        #sample = file.split('.')[0]
+        file_name_fields = file.split('.')
+        sample = ""
+        for i in range(len(file_name_fields) - 1, -1, -1):
+          if (file_name_fields[i] == 'genotype'):
+            sample = '.'.join(file_name_fields[0:i])
+            break
+        if (sample == ""):
+          sample = file.split('.')[0]
+    
         file_path = indir + file
 
         with open(file_path,'r') as file:

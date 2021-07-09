@@ -663,7 +663,16 @@ if __name__ == '__main__':
         sys.exit('[genotype] Error: FASTQ or alignment.p file required.')
     
     # Set up temporary and output folders, log file
-    sample = os.path.basename(args.file[0]).split('.')[0]
+    #sample = os.path.basename(args.file[0]).split('.')[0]
+    file_name_fields = os.path.basename(args.file[0]).split('.')
+    sample = ""
+    for i in range(len(file_name_fields) - 1, -1, -1):
+      if (file_name_fields[i] == 'extracted' or file_name_fields[i] == 'alignment'):
+        sample = '.'.join(file_name_fields[0:i])
+        break
+    if (sample == ""):
+      sample = os.path.basename(args.file[0]).split('.')[0]
+    
     outdir = check_path(args.outdir)
     temp = create_temp(args.temp)
     if args.log:
