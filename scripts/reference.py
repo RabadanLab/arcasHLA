@@ -101,10 +101,8 @@ def checkout_version(commithash, verbose = True):
     
     if not isfile(hla_dat):
         fetch_hla_dat()
-    else:
-        run_command(['git', 'clean', '-fd', IMGTHLA], 'clean')
 
-    command = ['git', '-C', IMGTHLA, 'checkout', commithash]
+    command = ['git', '-C', IMGTHLA, 'checkout', '-f', commithash]
     if verbose:
         run_command(command, '[reference] Checking out IMGT/HLA:')
     else:
@@ -585,7 +583,6 @@ if __name__ == '__main__':
         build_convert()
         
     elif args.commit:
-        check_ref()
         checkout_version(args.commit)
         build_fasta()
         build_convert()
