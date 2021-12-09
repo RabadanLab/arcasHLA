@@ -43,8 +43,8 @@ from arcas_utilities import *
 from align import *
 from genotype import expectation_maximization
 
-__version__     = '0.2.5'
-__date__        = '2021-04-12'
+__version__     = '0.3.0'
+__date__        = '2021-12-09'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -52,7 +52,6 @@ __date__        = '2021-04-12'
 
 rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 
-#partial_p       = rootDir + 'dat/ref/hla_partial.p'
 partial_json       = rootDir + 'dat/ref/hla_partial.p.json'
 partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
 hla_freq        = rootDir + 'dat/info/hla_freq.tsv'

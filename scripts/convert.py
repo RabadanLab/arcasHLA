@@ -36,8 +36,8 @@ from arcas_utilities import check_path, process_allele
 
 #-------------------------------------------------------------------------------
 
-__version__     = '0.2.5'
-__date__        = '2021-04-12'
+__version__     = '0.3.0'
+__date__        = '2021-12-09'
 
 #-------------------------------------------------------------------------------
 #   Paths and fileames
@@ -45,7 +45,6 @@ __date__        = '2021-04-12'
 
 rootDir = dirname(realpath(__file__)) + '/../'
 
-#hla_convert = rootDir + 'dat/ref/hla.convert.p'
 hla_convert_json = rootDir + 'dat/ref/hla.convert.json'
 
 #-------------------------------------------------------------------------------

@@ -32,8 +32,8 @@ from argparse import RawTextHelpFormatter
 
 from arcas_utilities import check_path
 
-__version__     = '0.2.0'
-__date__        = '2019-06-26'
+__version__     = '0.3.0'
+__date__        = '2021-12-09'
 
 #-------------------------------------------------------------------------------
 

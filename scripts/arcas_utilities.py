@@ -28,8 +28,8 @@ import logging as log
 import uuid
 from subprocess import PIPE, STDOUT, run
 
-__version__     = '0.2.0'
-__date__        = '2019-06-26'
+__version__     = '0.3.0'
+__date__        = '2021-12-09'
 
 #-------------------------------------------------------------------------------
 

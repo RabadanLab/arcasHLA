@@ -45,8 +45,8 @@ from Bio.SeqRecord import SeqRecord
 
 from arcas_utilities import *
 
-__version__     = '0.2.5'
-__date__        = '2021-04-12'
+__version__     = '0.3.0'
+__date__        = '2021-12-09'
 
 #-------------------------------------------------------------------------------
 #   Paths and fileames
@@ -59,17 +59,13 @@ IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
 hla_dat         = rootDir + 'dat/IMGTHLA/hla.dat'
 hla_nom_g       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_g.txt'
 hla_nom_p       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_p.txt'
-#hla_convert    = rootDir + 'dat/ref/hla.convert.p'
 hla_convert_json = rootDir + 'dat/ref/hla.convert.json'
 hla_fa          = rootDir + 'dat/ref/hla.fasta'
 partial_fa      = rootDir + 'dat/ref/hla_partial.fasta'
-#hla_p           = rootDir + 'dat/ref/hla.p'
-#partial_p       = rootDir + 'dat/ref/hla_partial.p'
 hla_json        = rootDir + 'dat/ref/hla.p.json'
 partial_json    = rootDir + 'dat/ref/hla_partial.p.json'
 hla_idx         = rootDir + 'dat/ref/hla.idx'
 partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
-#parameters      = rootDir + 'dat/info/parameters.p'
 parameters_json = rootDir + 'dat/info/parameters.json'
 
 #-------------------------------------------------------------------------------

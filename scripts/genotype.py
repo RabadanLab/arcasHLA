@@ -44,8 +44,8 @@ from reference import check_ref
 from arcas_utilities import *
 from align import *
 
-__version__     = '0.2.5'
-__date__        = '2021-04-12'
+__version__     = '0.3.0'
+__date__        = '2021-12-09'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -53,7 +53,6 @@ __date__        = '2021-04-12'
 
 rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 
-#hla_p      = rootDir + 'dat/ref/hla.p'
 hla_json   = rootDir + 'dat/ref/hla.p.json'
 hla_idx    = rootDir + 'dat/ref/hla.idx'
 hla_freq   = rootDir + 'dat/info/hla_freq.tsv'
