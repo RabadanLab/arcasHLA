@@ -52,13 +52,13 @@ def index_bam(bam):
         sys.exit('[extract] Error: unable to index bam file.')
         
 
-def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
+def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads, sample):
     '''Extracts reads from chromosome 6 and alts/decoys if applicable.'''
     
     log.info(f'[extract] Extracting reads from {bam}')
     
     file_list = []
-    sample = os.path.splitext(os.path.basename(bam))[0]
+    #sample = os.path.splitext(os.path.basename(bam))[0]
     
     # Index bam
     index_bam(bam)
@@ -199,7 +199,12 @@ if __name__ == '__main__':
                         action = 'count',
                         help='keep intermediate files\n\n',
                         default=False)
-    
+   
+    parser.add_argument('--sample',
+                        type = str,
+                        help = 'User defined sample id\n',
+                        default='')
+
     parser.add_argument('-t',
                         '--threads', 
                         type = str,
@@ -216,7 +221,9 @@ if __name__ == '__main__':
     temp = create_temp(args.temp)
     
     sample = os.path.basename(args.bam).split('.')[0]
-    
+    if (args.sample != ""):
+      sample = args.sample
+
     datDir = os.path.dirname(os.path.realpath(__file__)) + '/../dat/'
     
     # Set up log file
@@ -260,7 +267,8 @@ if __name__ == '__main__':
                   args.unmapped,
                   alts,
                   temp,
-                  args.threads)
+                  args.threads,
+									sample)
     
     remove_files(temp, args.keep_files)
     
