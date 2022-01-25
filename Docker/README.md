@@ -3,13 +3,14 @@
 Installs up-to-date versions of arcasHLA and all dependencies:
 
 - arcasHLA
+- [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
 - coreutils
 - [Samtools v1.19](http://www.htslib.org/)
 - [bedtools v2.29.1](http://bedtools.readthedocs.io/)
 - [pigz v2.3.1](https://zlib.net/pigz/)
 - [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
 - Python 3.6
-- [Biopython](https://biopython.org/wiki/Download)
+- [Biopython v1.77](https://biopython.org/wiki/Download)
 - NumPy
 - SciPy
 - Pandas

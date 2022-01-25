@@ -45,6 +45,8 @@ from Bio.SeqRecord import SeqRecord
 
 from arcas_utilities import *
 
+#-------------------------------------------------------------------------------
+
 __version__     = '0.3.0'
 __date__        = '2021-12-09'
 

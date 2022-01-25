@@ -44,6 +44,8 @@ from reference import check_ref
 from arcas_utilities import *
 from align import *
 
+#-------------------------------------------------------------------------------
+
 __version__     = '0.3.0'
 __date__        = '2021-12-09'
 
@@ -364,19 +366,19 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, gene_count,
         elif a1_count == 0:
             log.info('[genotype] Likely heterozygous: minor allele has no '+
                      'nonshared reads')
-            genotype = [a2]
+            genotype = [a2, a2]
         elif a2_count == 0:
             log.info('[genotype] Likely heterozygous: minor allele has no '+
                      'nonshared reads')
-            genotype = [a1]
+            genotype = [a1, a1]
         elif min(a1_count/a2_count, a2_count/a1_count) < zygosity_threshold:
             log.info(f'[genotype] Likely homozygous: minor/major '+
                       'nonshared count {:.2f}'
                       .format(min(a1_count/a2_count, a2_count/a1_count)))
             if a1_count > a2_count:
-                genotype = [a1]
+                genotype = [a1, a1]
             else:
-                genotype = [a2]
+                genotype = [a2, a2]
         else:
             log.info(f'[genotype] Likely heterozygous: minor/major '+
                       'nonshared count {:.2f}'
@@ -385,14 +387,12 @@ def predict_genotype(eqs, allele_idx, allele_eq, em_results, gene_count,
         
         
         
-        
-        
     else:
         a1, alleles, _ = em_results[0]
         pair_count = get_count(a1)
         a1_count = pair_count
         a2_count = None
-        genotype = [process_allele(alleles[0], 3),]
+        genotype = [process_allele(alleles[0], 3),process_allele(alleles[0], 3)]
         
     return genotype, pair_count
 
@@ -716,9 +716,12 @@ if __name__ == '__main__':
         alignment_info = load_alignment(args.file[0], commithash)
     else:
         alignment_info = get_alignment(args.file, sample, hla_idx,
-                                      reference_info, outdir, temp, args.threads, args.single, avg=args.avg, std=args.std)
+                                      reference_info, outdir, temp,
+                                      args.threads, args.single,
+                                      avg=args.avg, std=args.std)
         
-    commithash, eq_idx, allele_eq, paired, align_stats, gene_stats = alignment_info
+    (commithash, eq_idx, allele_eq,
+            paired, align_stats, gene_stats) = alignment_info
 
     # Set up EM parameters
     if not args.drop_iterations:

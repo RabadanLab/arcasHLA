@@ -43,6 +43,8 @@ from itertools import combinations
 from reference import check_ref, get_exon_combinations
 from arcas_utilities import *
 
+#-------------------------------------------------------------------------------
+
 __version__     = '0.3.0'
 __date__        = '2021-12-09'
 
@@ -59,6 +61,27 @@ rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 def pseudoalign(fqs, sample, paired, reference, outdir, temp, threads, avg, std):
     '''Calls Kallisto to pseudoalign reads.'''
 
+    log.info('[alignment] Analyzing read length')
+
+    awk = "| awk '{if(NR%4==2) print length($1)}'"
+
+    if fqs[0].endswith('.gz'):
+        cat = 'zcat'
+    else:
+        cat = 'cat'
+
+    # Get read length stats
+    reads_file = ''.join([temp, sample, '.reads.txt'])
+
+    for fq in fqs:
+        command = [cat, '<', fq, awk, '>>', reads_file]
+        run_command(command)
+
+    read_lengths = np.genfromtxt(reads_file)
+
+    if len(read_lengths) == 0:
+        sys.exit('[genotype] Error: FASTQ files are empty; check arcasHLA extract for issues.')
+
     command = ['kallisto pseudo -i', reference, '-t', threads, '-o', temp]
 
     if not paired:
@@ -67,7 +90,9 @@ def pseudoalign(fqs, sample, paired, reference, outdir, temp, threads, avg, std)
     command.extend(fqs)
     run_command(command, '[alignment] Pseudoaligning with Kallisto: ')
 
-           
+    num = len(read_lengths)
+
+    return num
 
 #-----------------------------------------------------------------------------
 # Process transcript assembly output
@@ -187,9 +212,10 @@ def get_count_stats(eq_idx, gene_length):
 
 def alignment_summary(align_stats, partial = False):
     '''Prints alignment summary to log.'''
-    count_unique, count_multi, _, _ = align_stats
-    log.info('[alignment] Pseudoaligned {:.0f} reads '
-             .format(count_unique + count_multi)+
+
+    count_unique, count_multi, total, _, _ = align_stats
+    log.info('[alignment] Processed {:.0f} reads, {:.0f} pseudoaligned '
+             .format(total, count_unique + count_multi)+
              'to HLA reference')
               
     log.info('[alignment] {:.0f} reads mapped to a single HLA gene'
@@ -207,14 +233,15 @@ def gene_summary(gene_stats):
         log.info('\t\tHLA-{: <6}    {: >8.2f}%    {: >10.0f}    {: >7.0f}'
                  .format(g, a*100, c, e))
 
-def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads, single, partial = False, avg = 200, std = 20):
+def get_alignment(fqs, sample, reference, reference_info, outdir,
+        temp, threads, single, partial = False, avg = 200, std = 20):
     '''Runs pseudoalignment and processes output.'''
     paired = not single
         
     count_file = ''.join([temp, 'pseudoalignments.tsv'])
     eq_file = ''.join([temp, 'pseudoalignments.ec'])
 
-    pseudoalign(fqs,
+    total = pseudoalign(fqs,
                 sample,
                 paired,
                 reference,
@@ -245,7 +272,7 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
                                                lengths,
                                                exon_idx,
                                                exon_combos)
-        align_stats.extend([avg, std])
+        align_stats.extend([total, avg, std])
         
         alignment_summary(align_stats, True)
         
@@ -272,7 +299,7 @@ def get_alignment(fqs, sample, reference, reference_info, outdir, temp, threads,
                                                         allele_idx, 
                                                         lengths)
         
-        align_stats.extend([avg, std])
+        align_stats.extend([total, avg, std])
         
         alignment_summary(align_stats)
         

@@ -5,6 +5,7 @@ FROM ubuntu:18.04
 ENV kallisto_version 0.44.0
 ENV samtools_version 1.9
 ENV bedtools_version 2.29.2
+ENV biopython_version 1.77
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 
@@ -20,7 +21,7 @@ RUN apt-get update -y && apt-get install -y \
     bzip2 \
     python3-dev \
     python3-pip \
-    python3-biopython \
+    python \
     pigz \
     git \
     libncurses5-dev \
@@ -34,6 +35,7 @@ RUN apt-get update -y && apt-get install -y \
 RUN pip3 install numpy
 RUN pip3 install scipy
 RUN pip3 install pandas
+RUN pip3 install biopython==${biopython_version}
 
 # install kallisto
 RUN mkdir -p /usr/bin/kallisto \

@@ -35,6 +35,8 @@ from os.path import isfile
 from argparse import RawTextHelpFormatter
 from arcas_utilities import *
 
+#-------------------------------------------------------------------------------
+
 __version__     = '0.3.0'
 __date__        = '2021-12-09'
 
@@ -124,6 +126,7 @@ def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
     # Sort BAM
     hla_sorted = ''.join([temp, sample, '.hla.sorted.bam'])
     file_list.append(hla_sorted)
+    file_list.append(hla_sorted + '.bai')
     message = '[extract] Sorting bam: '
     command = ['samtools', 'sort', '-n', '-@'+threads, 
                 hla_filtered_bam, '-o', hla_sorted]
@@ -143,6 +146,35 @@ def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
         
     else:
         fq = ''.join([outdir, sample, '.extracted.fq'])
+        command.extend(['-fq', fq])
+        run_command(command, message)
+        run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq])
+
+def bam_to_fastq(bam, outdir, paired, temp, threads):
+    '''Converts bam to fastq'''
+
+    log.info(f'[extract] Extracting reads from {bam}')
+
+    file_list = []
+    sample = os.path.splitext(os.path.basename(bam))[0]
+
+    # Index bam
+    index_bam(bam)
+
+    # Convert BAM to FASTQ and compress
+    message = '[extract] Converting bam to fastq: '
+    command = ['bedtools', 'bamtofastq', '-i', bam]
+    if paired:
+        fq1 = ''.join([outdir, sample, '.1.fq'])
+        fq2 = ''.join([outdir, sample, '.2.fq'])
+        command.extend(['-fq', fq1, '-fq2', fq2])
+        run_command(command, message)
+
+        run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq1])
+        run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq2])
+
+    else:
+        fq = ''.join([outdir, sample, '.fq'])
         command.extend(['-fq', fq])
         run_command(command, message)
         run_command(['pigz', '-f', '-p', threads, '-S', '.gz', fq])
@@ -183,7 +215,12 @@ if __name__ == '__main__':
     parser.add_argument('--unmapped', 
                         action = 'count',
                         help='include unmapped reads\n  default: False\n\n',
-                        default=False)    
+                        default=False)
+
+    parser.add_argument('--allreads',
+                        action = 'count',
+                        help='output all reads to fastq\n  default: False\n\n',
+                        default=False)
                         
     parser.add_argument('-o', '--outdir', 
                         type=str,
@@ -254,14 +291,18 @@ if __name__ == '__main__':
     with open(datDir + 'info/decoys_alts.json', 'r') as file:
         alts = json.load(file)
 
-    extract_reads(args.bam,
-                  outdir, 
-                  not args.single,
-                  args.unmapped,
-                  alts,
-                  temp,
-                  args.threads)
-    
+    if args.allreads:
+        bam_to_fastq(args.bam, outdir, not args.single, temp, args.threads)
+
+    else:
+        extract_reads(args.bam,
+                      outdir,
+                      not args.single,
+                      args.unmapped,
+                      alts,
+                      temp,
+                      args.threads)
+
     remove_files(temp, args.keep_files)
     
     hline()
