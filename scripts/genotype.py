@@ -46,8 +46,8 @@ from align import *
 
 #-------------------------------------------------------------------------------
 
-__version__     = '0.3.0'
-__date__        = '2021-12-09'
+__version__     = '0.4.0'
+__date__        = '2022-01-27'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
@@ -55,9 +55,9 @@ __date__        = '2021-12-09'
 
 rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
 
-hla_json   = rootDir + 'dat/ref/hla.p.json'
-hla_idx    = rootDir + 'dat/ref/hla.idx'
-hla_freq   = rootDir + 'dat/info/hla_freq.tsv'
+hla_json        = rootDir + 'dat/ref/hla.p.json'
+hla_idx         = rootDir + 'dat/ref/hla.idx'
+hla_freq        = rootDir + 'dat/info/hla_freq.tsv'
 parameters_json = rootDir + 'dat/info/parameters.json'
 
 #-----------------------------------------------------------------------------

@@ -46,12 +46,13 @@ from arcas_utilities import *
 
 #-------------------------------------------------------------------------------
 
-__version__     = '0.2'
-__date__        = '2019-04-02'
+__version__     = '0.4.0'
+__date__        = '2022-01-27'
 
 #-------------------------------------------------------------------------------
 rootDir = os.path.dirname(os.path.realpath(__file__)) + '/../'
-parameters = rootDir + 'dat/info/parameters.p'
+
+parameters_json = rootDir + 'dat/info/parameters.json'
 #-------------------------------------------------------------------------------
 def arg_check_files(parser, arg):
     for file in arg.split():
@@ -61,47 +62,14 @@ def arg_check_files(parser, arg):
             parser.error('The format of %s is invalid.' %file)
         return arg
 
-def analyze_reads(fqs, paired, reads_file):
-    '''Analyzes read length for single-end sampled, required by Kallisto.'''
-    
-    awk = "| awk '{if(NR%4==2) print length($1)}'"
-    
-    if fqs[0].endswith('.gz'):
-        cat = 'zcat'
-    else:
-        cat = 'cat'
-    
-    log.info('[alignment] Analyzing read length')
-    if paired:
-        fq1, fq2 = fqs
-        
-        command = [cat, '<', fq1, awk, '>' , reads_file]
-        run_command(command)
-        
-        command = [cat, '<', fq2, awk, '>>', reads_file]
-        run_command(command)
-        
-    else:
-        fq = fqs[0]
-        command = [cat, '<', fq, awk, '>', reads_file]
-        run_command(command)
-        
-    read_lengths = np.genfromtxt(reads_file)
-    
-    if len(read_lengths) == 0:
-        sys.exit('[genotype] Error: FASTQ files are empty; check arcasHLA extract for issues.')
-    
-    num = len(read_lengths)
-    avg = round(np.mean(read_lengths), 6)
-    std = round(np.std(read_lengths), 6)
-    
-    
-    return num, avg, std
-    
 if __name__ == '__main__':
     
-    with open(parameters, 'rb') as file:
-        genes, populations, databases = pickle.load(file)
+    #with open(parameters, 'rb') as file:
+    #    genes, populations, databases = pickle.load(file)
+    with open(parameters_json, 'r') as file:
+        genes, populations, _ = json.load(file)
+        genes = set(genes)
+        populations = set(populations)
     
     parser = argparse.ArgumentParser(prog='arcasHLA quant',
                                  usage='%(prog)s [options] FASTQs',
@@ -148,6 +116,25 @@ if __name__ == '__main__':
                         help='keep intermediate files\n\n',
                         default=False)
                         
+    parser.add_argument('-l',
+                        '--avg', 
+                        type=int,
+                        help='Estimated average fragment length ' +
+                                'for single-end reads\n  default: 200\n\n',
+                        default=200)
+
+    parser.add_argument('-s',
+                        '--std', 
+                        type=int,
+                        help='Estimated standard deviation of fragment length ' +
+                             'for single-end reads\n  default: 20\n\n',
+                        default=20)
+
+    parser.add_argument('--single',
+                        action='store_true',
+                        help='Include flag if single-end reads. Default is paired-end.\n\n',
+                        default=False)
+
     parser.add_argument('-t',
                         '--threads', 
                         type = str,
@@ -193,21 +180,17 @@ if __name__ == '__main__':
         
     if args.file[0].endswith('.fq.gz'):
     
-
-        reads_file = ''.join([temp, sample, '.reads.txt'])
-        if not paired:
-            num, avg, std = analyze_reads(args.file, paired, reads_file)
-            if std == 0.0: std = .00000001
-
-
         command = ['kallisto quant', '-i', indv_idx, '-o', temp, '-t', args.threads]
 
-        if len(args.file) == 1:
+        if args.single:
             command.extend(['--single -l', str(avg), '-s', str(std)])
 
         command.extend(args.file)
 
-        output = run_command(command).stderr.decode()
+        output = run_command(command,'[quant] Quantifying with Kallisto: ').stderr.decode()
+
+        if args.verbose:
+            print(output)
 
         total_reads = re.findall('(?<=processed ).+(?= reads,)',output)[0]
         total_reads = int(re.sub(',','',total_reads))
@@ -244,39 +227,7 @@ if __name__ == '__main__':
             counts[gene] += kallisto_results.loc[int(idx)]['est_counts']
             lengths[gene] += kallisto_results.loc[int(idx)]['length']
             tpm[gene] += kallisto_results.loc[int(idx)]['tpm']
-    '''
-    scale = aligned_reads/1e6
-    rpm = {idx:count/scale for idx, count in counts.items()}
-    rpkm = {idx: idx_rpm/(lengths[idx]/1000) for idx, idx_rpm in rpm.items()}
 
-    
-    gene_results = defaultdict(float)
-    gene_results['total_count'] = total_reads
-    gene_results['aligned_reads'] = aligned_reads
-    
-    allele_results = defaultdict(float)
-    allele_results['total_count'] = total_reads
-    allele_results['aligned_reads'] = aligned_reads
-    
-    for allele_id, allele in genotype.items():
-        allele_results[allele_id] = allele
-
-    total_hla_count = 0.
-    for gene, allele_ids in genes.items():
-        for allele_id in set(allele_ids):
-            gene_results[gene + '_count'] += counts[allele_id]
-            total_hla_count += counts[allele_id]
-            #gene_results[gene + '_rpkm'] += rpkm[allele_id]
-            gene_results[gene + '_tpm'] += tpm[allele_id]
-            
-            allele_results[allele_id + '_count'] = counts[allele_id]
-            #allele_results[allele_id + '_rpkm'] = rpkm[allele_id]
-            allele_results[allele_id + '_tpm'] = tpm[allele_id]
-    for gene, allele_ids in genes.items():
-        for allele_id in set(allele_ids):
-            baf = allele_results[gene + '1_count'] / (allele_results[gene + '1_count'] + allele_results[gene + '2_count'])
-            allele_results[gene + '_baf'] = min(baf, 1-baf)
-    '''
     gene_results = {gene:defaultdict(int) for gene in genes}
     
     allele_results = {gene:defaultdict(float) for gene in genes}
@@ -301,37 +252,6 @@ if __name__ == '__main__':
             allele_results[gene]['baf'] = round(min(baf, 1-baf),2)
     for gene in genes:
         gene_results[gene]['abundance'] = str(round(gene_results[gene]['abundance']*100,2)) + '%'
-    '''
-    print('-'*80)
-    print('[quant] Observed HLA genes:')
-
-    print('        {: <10}    {}    {}    {}'
-             .format('gene','count','   TPM',' abundance'))
-    for gene in sorted(genes):
-        print('        HLA-{: <6}    {: >5.0f}    {: >6.0f}    {: >9.2f}%'
-                 .format(gene, gene_results[gene + '_count'], gene_results[gene + '_tpm'], (gene_results[gene + '_count']/total_hla_count)*100))
-            
-    print('-'*80)
-    
-    
-    print('-'*80)
-    print('[quant] Observed HLA genes:')
-
-    print('        {: <10}    {: <12}    {}    {: <12}    {}'
-          .format('gene','allele 1','count','allele 2','count'))
-    
-    for gene in sorted(genes):
-        a1 = allele_results[gene + '1']
-        a2 = allele_results[gene + '2']
-        c1 = allele_results[gene+'1_count']
-        c2 = allele_results[gene+'2_count']
-        if c2 == 0: baf = 0
-        else: baf = min(c1/(c1+c2),c2/(c1+c2))
-        if not a2: a2 = ''
-        print('        HLA-{: <6}    {: <12}    {: >5.0f}    {: <12}    {: >5.0f}     {: > 5.2f}'
-                 .format(gene, a1, c1, a2, c2, baf))
-    
-    '''
     
     df = pd.DataFrame(allele_results).T
     df.index.names = ['gene']

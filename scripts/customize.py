@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-#   quant_ref.py: genotypes from extracted chromosome 6 reads.
+#   customize.py: genotypes from extracted chromosome 6 reads.
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
@@ -53,26 +53,26 @@ from arcas_utilities import *
 
 #-------------------------------------------------------------------------------
 
-__version__     = '0.2'
-__date__        = '2019-04-02'
+__version__     = '0.4.0'
+__date__        = '2022-01-27'
 
 #-------------------------------------------------------------------------------
 #   Paths and filenames
 #-------------------------------------------------------------------------------
 
 rootDir            = os.path.dirname(os.path.realpath(__file__)) + '/../'
-cDNA_p             = rootDir + 'dat/ref/cDNA.p'
-cDNA_single_p      = rootDir + 'dat/ref/cDNA.single.p'
+allele_groups_json = rootDir + 'dat/ref/allele_groups.json'
+cDNA_json          = rootDir + 'dat/ref/cDNA.json'
+cDNA_single_json   = rootDir + 'dat/ref/cDNA.single.json'
 GRCh38_chr6        = rootDir + 'dat/ref/GRCh38.chr6.noHLA.fasta'
 GRCh38             = rootDir + 'dat/ref/GRCh38.all.noHLA.fasta'
 HLA_json           = rootDir + 'dat/ref/hla_transcripts.json'
 dummy_HLA_fa       = rootDir + 'dat/ref/GRCh38.chr6.HLA.fasta'
-parameters = rootDir + 'dat/info/parameters.p'
+parameters_json    = rootDir + 'dat/info/parameters.json'
 
 #-------------------------------------------------------------------------------
 
 def build_custom_reference(subject, genotype, grouping, transcriptome_type, temp):
-    print(genotype)
     
     dummy_HLA_dict = SeqIO.to_dict(SeqIO.parse(dummy_HLA_fa, 'fasta')) 
     
@@ -91,12 +91,26 @@ def build_custom_reference(subject, genotype, grouping, transcriptome_type, temp
         for transcript in HLA_transcripts[gene]:
             transcriptome.append(dummy_HLA_dict[transcript])
      
-    with open('dat/ref/allele_groups.p','rb') as file:
-        groups = pickle.load(file)
-    with open(cDNA_p,'rb') as file:
-        cDNA = pickle.load(file)    
-    with open(cDNA_single_p,'rb') as file:
-        cDNA_single = pickle.load(file)
+    #with open(allele_groups_p,'rb') as file:
+    #    groups = pickle.load(file)
+    with open(allele_groups_json,'r') as file:
+        groups_temp = json.load(file)
+        groups = defaultdict(list)
+        for k,v in groups_temp.items():
+            groups[k] = set(v)
+
+    #with open(cDNA_p,'rb') as file:
+    #    cDNA = pickle.load(file)
+    with open(cDNA_json,'r') as file:
+        cDNA_temp = json.load(file)
+        cDNA = defaultdict(list)
+        for k,v in cDNA_temp.items():
+            cDNA[k] = set(v)
+
+    #with open(cDNA_single_p,'rb') as file:
+    #    cDNA_single = pickle.load(file)
+    with open(cDNA_single_json,'r') as file:
+        cDNA_single = json.load(file)
     
     indv_fasta = ''.join([temp,subject,'.fasta'])
     indv_idx  = ''.join([outdir,subject,'.idx'])
@@ -135,7 +149,7 @@ def build_custom_reference(subject, genotype, grouping, transcriptome_type, temp
      
     for transcript in transcriptome:
         allele_idx[str(idx)] = transcript.id
-        lengths[str(idx)] = len(seq)
+        lengths[str(idx)] = len(transcript.seq)
 
         record = SeqRecord(transcript.seq,
                            id=str(idx),
@@ -151,7 +165,7 @@ def build_custom_reference(subject, genotype, grouping, transcriptome_type, temp
         
 
     output = run_command(['kallisto', 'index','-i', indv_idx, indv_fasta])
-    print(output)
+    print(output.stderr.decode())
 
 def process_json_genotype(input_genotype, genes):
     genotype = dict()
@@ -186,8 +200,12 @@ def process_str_genotype(input_genotype, genes):
     
 if __name__ == '__main__':
     
-    with open(parameters, 'rb') as file:
-        genes, populations, databases = pickle.load(file)
+    #with open(parameters, 'rb') as file:
+    #    genes, populations, databases = pickle.load(file)
+    with open(parameters_json, 'r') as file:
+        genes, populations, _ = json.load(file)
+        genes = set(genes)
+        populations = set(populations)
     
     parser = argparse.ArgumentParser(prog='arcasHLA customize',
                                  usage='%(prog)s [options]',
@@ -270,7 +288,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if args.resolution != 2:
-        sys.exit('[quant] only 2-field resolution supported at this time.')
+        sys.exit('[customize] only 2-field resolution supported at this time.')
         
     outdir = check_path(args.outdir)
     temp = args.temp
@@ -286,8 +304,8 @@ if __name__ == '__main__':
             subject = args.subject
         else:
             subject = os.path.basename(args.genotype).split('.')[0]
-        print('HERE')
-        if args.verbose: print('[quant] Building reference for', subject)
+
+        if args.verbose: print('[customize] Building reference for', subject)
         
         with open(args.genotype, 'r') as file:
             input_genotype = json.load(file)
@@ -297,13 +315,11 @@ if __name__ == '__main__':
         print(genotype)
         
         build_custom_reference(subject, genotype, args.grouping, args.transcriptome, temp)
-        print('done')
-        
                 
     elif args.genotype.endswith('.genotypes.json') or args.genotype.endswith('.tsv'):
         temp = create_temp(temp)
         
-        if args.verbose: print('[quant] Building references from',os.path.basename(args.genotype))
+        if args.verbose: print('[customize] Building references from',os.path.basename(args.genotype))
         
         genotypes = dict()
         if args.genotype.endswith('genotypes.json'):

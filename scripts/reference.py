@@ -47,8 +47,8 @@ from arcas_utilities import *
 
 #-------------------------------------------------------------------------------
 
-__version__     = '0.3.0'
-__date__        = '2021-12-09'
+__version__     = '0.4.0'
+__date__        = '2022-01-27'
 
 #-------------------------------------------------------------------------------
 #   Paths and fileames
@@ -56,19 +56,19 @@ __date__        = '2021-12-09'
 
 rootDir = dirname(realpath(__file__)) + '/../'
 
-IMGTHLA         = rootDir + 'dat/IMGTHLA/'
-IMGTHLA_git     = 'https://github.com/ANHIG/IMGTHLA.git'
-hla_dat         = rootDir + 'dat/IMGTHLA/hla.dat'
-hla_nom_g       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_g.txt'
-hla_nom_p       = rootDir + 'dat/IMGTHLA/wmda/hla_nom_p.txt'
+IMGTHLA          = rootDir + 'dat/IMGTHLA/'
+IMGTHLA_git      = 'https://github.com/ANHIG/IMGTHLA.git'
+hla_dat          = rootDir + 'dat/IMGTHLA/hla.dat'
+hla_nom_g        = rootDir + 'dat/IMGTHLA/wmda/hla_nom_g.txt'
+hla_nom_p        = rootDir + 'dat/IMGTHLA/wmda/hla_nom_p.txt'
 hla_convert_json = rootDir + 'dat/ref/hla.convert.json'
-hla_fa          = rootDir + 'dat/ref/hla.fasta'
-partial_fa      = rootDir + 'dat/ref/hla_partial.fasta'
-hla_json        = rootDir + 'dat/ref/hla.p.json'
-partial_json    = rootDir + 'dat/ref/hla_partial.p.json'
-hla_idx         = rootDir + 'dat/ref/hla.idx'
-partial_idx     = rootDir + 'dat/ref/hla_partial.idx'
-parameters_json = rootDir + 'dat/info/parameters.json'
+hla_fa           = rootDir + 'dat/ref/hla.fasta'
+partial_fa       = rootDir + 'dat/ref/hla_partial.fasta'
+hla_json         = rootDir + 'dat/ref/hla.p.json'
+partial_json     = rootDir + 'dat/ref/hla_partial.p.json'
+hla_idx          = rootDir + 'dat/ref/hla.idx'
+partial_idx      = rootDir + 'dat/ref/hla_partial.idx'
+parameters_json  = rootDir + 'dat/info/parameters.json'
 
 #-------------------------------------------------------------------------------
 #   Fetch and process IMGTHLA database

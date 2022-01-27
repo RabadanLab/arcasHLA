@@ -35,8 +35,8 @@ from arcas_utilities import check_path
 
 #-------------------------------------------------------------------------------
 
-__version__     = '0.3.0'
-__date__        = '2021-12-09'
+__version__     = '0.4.0'
+__date__        = '2022-01-27'
 
 #-------------------------------------------------------------------------------
 
@@ -178,8 +178,8 @@ if __name__ == '__main__':
         process_json(gene_count_files, indir, outdir,
                 args.run, 'genes')
 
-    if quant_files:
-        process_quant(quant_files, indir, outdir,
-                args.run, 'quant')
+    #if quant_files:
+    #    process_quant(quant_files, indir, outdir,
+    #            args.run, 'quant')
         
 #-------------------------------------------------------------------------------
