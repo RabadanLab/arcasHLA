@@ -1,1 +1,2 @@
+*.fasta filter=lfs diff=lfs merge=lfs -text
 dat/ref/GRCh38.all.noHLA.fasta filter=lfs diff=lfs merge=lfs -text
