@@ -205,7 +205,109 @@ arcasHLA reference --update
 - `--update` : update to latest IMGT/HLA version
 - `--version` : checkout IMGT/HLA version using commithash
 - `--rebuild` : rebuild HLA database
-- `-v, --verbose`     : verbosity (default: False)   
+- `-v, --verbose`     : verbosity (default: False) 
+
+## Build Customized References ##
+
+#### Input: arcasHLA genotypes.json ####
+Customized references can be built from arcasHLA genotype outputs.
+```
+./arcasHLA customize genotypes.json -o ~/ref
+```
+#### Input: HLA tsv ####
+
+Customized references can be built from a tab-separated file with the following structure:
+
+| subject | A1      | A2      | B1      | B2      | C1      | C2      |
+|---------|---------|---------|---------|---------|---------|---------|
+| Example | A*01:01 | A*02:01 | B*07:01 | B*52:01 | C*04:01 | C*18:01 |
+
+```
+./arcasHLA customize hla.tsv -o ~/ref
+```
+#### Options: ####
+```
+usage: arcasHLA customize [options]
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+  -G , --genotype       comma-separated list of HLA alleles (e.g. A*01:01,A*11:01,...)
+                        arcasHLA output genotype.json or genotypes.json
+                        or tsv with format specified in README.md
+  -s , --subject        subject name, only required for list of alleles
+  -g , --genes          comma separated list of HLA genes
+                        default: all
+                        options: A, B, C, DMA, DMB, DOA, DOB, DPA1, DPB1, DQA1,
+                        DQB1, DRA, DRB1, DRB3, DRB5, E, F, G, H, J, K, L
+
+  --transcriptome TRANSCRIPTOME
+                        transcripts to include besides input HLAs
+                         options: full, chr6, none
+                          default: full
+
+  --resolution RESOLUTION
+                        genotype resolution, only use >2 when typing performed with assay or Sanger sequencing
+                          default: 2
+
+  --grouping GROUPING   type/number of transcripts to include per allele
+                         single - one 3-field resolution transcript per allele (e.g. A*01:01:01)
+                        g-group - all transcripts with identical binding regions
+                          default: protein group - all transcripts with identical protein types (2 fields the same)
+
+  -o , --outdir         out directory
+
+  --temp                temp directory
+
+  --keep_files          keep intermediate files
+
+  -t , --threads
+  -v, --verbose
+```
+
+## Quantification ##
+Note: if the reference was built with the `--chr6` flag, you should run `quant` with extracted chromosome 6 FASTQs (see `extract`).
+
+```
+./arcasHLA quant --ref /path/to/ref/sample FASTQ
+```
+
+Example:
+```
+./arcasHLA quant --ref ~/ref/Pt23 -t 8 -o /Volumes/quant/ /Volumes/fastq/Pt23_pre.1.fq.gz /Volumes/fastq/Pt23_pre.2.fq.gz
+```
+
+#### Options: ####
+```
+usage: arcasHLA quant [options] FASTQs
+
+positional arguments:
+  file               list of fastq files
+
+optional arguments:
+  -h, --help         show this help message and exit
+
+  --sample SAMPLE    sample name
+  --ref              arcasHLA quant_ref path (e.g. "/path/to/ref/sample")
+
+  -o , --outdir      out directory
+
+  --temp             temp directory
+
+  --keep_files       keep intermediate files
+
+  -l AVG, --avg AVG  Estimated average fragment length for single-end reads
+                       default: 200
+
+  -s STD, --std STD  Estimated standard deviation of fragment length for single-end reads
+                       default: 20
+
+  --single           Include flag if single-end reads. Default is paired-end.
+
+  -t , --threads
+  -v, --verbose
+```
+ 
 
 ## Citations ##
 Orenbuch R, Filip I, Comito D, et al (2019) arcasHLA: high resolution HLA typing from RNA seq. Bioinformatics doi:[10.1093/bioinformatics/btz474](http://dx.doi.org/10.1093/bioinformatics/btz474)
