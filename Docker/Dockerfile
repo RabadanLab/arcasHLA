@@ -2,9 +2,9 @@
 FROM ubuntu:18.04
 
 # set the environment variables
-ENV kallisto_version 0.44.0
-ENV samtools_version 1.9
-ENV bedtools_version 2.29.2
+ENV kallisto_version 0.46.2
+ENV samtools_version 1.11
+ENV bedtools_version 2.30.0
 ENV biopython_version 1.77
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
