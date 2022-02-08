@@ -183,7 +183,7 @@ if __name__ == '__main__':
         command = ['kallisto quant', '-i', indv_idx, '-o', temp, '-t', args.threads]
 
         if args.single:
-            command.extend(['--single -l', str(avg), '-s', str(std)])
+            command.extend(['--single -l', str(args.avg), '-s', str(args.std)])
 
         command.extend(args.file)
 
