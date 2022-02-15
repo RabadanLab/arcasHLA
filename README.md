@@ -74,11 +74,11 @@ To see the list of available tools, simply enter `arcasHLA`. To view the require
 
 ### Extract reads ###
 
-arcasHLA takes sorted BAM files and extracts chromosome 6 reads and related HLA sequences. If the BAM file is not indexed, this tool will run samtools index before extracting reads. By default, `extract` outputs a single FASTQ file; use the `--paired` flag for paired-end samples.
+arcasHLA takes sorted BAM files and extracts chromosome 6 reads and related HLA sequences. If the BAM file is not indexed, this tool will run samtools index before extracting reads. By default, `extract` outputs paired FASTQ files; use the `--single` flag for single-end samples.
 
     arcasHLA extract [options] /path/to/sample.bam 
     
-Output: `sample.1.fq.gz`, `sample.2.fq.gz`
+Output: `sample.extracted.1.fq.gz`, `sample.extracted.2.fq.gz`
 
 #### Options: ####
 - `--single`          : single-end reads (default: False)                                                                             
