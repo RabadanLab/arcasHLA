@@ -115,21 +115,13 @@ def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
             command.extend([bam, alt+':', '>>', hla_filtered])
             run_command(command)
 
-
-    # Convert SAM to BAM
-    message = '[extract] Converting SAM to BAM: '
-    command = ['samtools', 'view', '-Sb', '-@'+threads,
-                hla_filtered, '>', hla_filtered_bam]    
-    run_command(command, message)
-            
-
-    # Sort BAM
+    # Sort and convert to BAM
     hla_sorted = ''.join([temp, sample, '.hla.sorted.bam'])
     file_list.append(hla_sorted)
     file_list.append(hla_sorted + '.bai')
     message = '[extract] Sorting bam: '
     command = ['samtools', 'sort', '-n', '-@'+threads, 
-                hla_filtered_bam, '-o', hla_sorted]
+                hla_filtered, '-o', hla_sorted]
     run_command(command, message)
 
     # Convert BAM to FASTQ and compress
