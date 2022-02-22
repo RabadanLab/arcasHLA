@@ -178,7 +178,7 @@ if __name__ == '__main__':
     for idx, gene in allele_idx.items():
         idx_allele[gene].add(idx)
         
-    if args.file[0].endswith('.fq.gz'):
+    if args.file[0].endswith('.fq.gz') or args.file[0].endswith('.fastq.gz'):
     
         command = ['kallisto quant', '-i', indv_idx, '-o', temp, '-t', args.threads]
 
@@ -255,7 +255,10 @@ if __name__ == '__main__':
     
     df = pd.DataFrame(allele_results).T
     df.index.names = ['gene']
-    df = df[['allele1','allele2', 'allele1_count',  'allele2_count', 'allele2_tpm','allele1_tpm', 'baf']]
+    try:
+        df = df[['allele1','allele2', 'allele1_count', 'allele2_count', 'allele1_tpm', 'allele2_tpm', 'baf']]
+    except:
+        df = df[['allele1', 'allele1_count', 'allele1_tpm']]
     df.to_csv(allele_results_tsv,sep='\t')
     
     df = pd.DataFrame(gene_results).T
