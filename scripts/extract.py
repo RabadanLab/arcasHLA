@@ -67,8 +67,6 @@ def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
     
     hla_filtered = ''.join([temp, sample, '.hla.sam'])
     file_list.append(hla_filtered)
-    hla_filtered_bam = ''.join([temp, sample, '.hla.bam'])
-    file_list.append(hla_filtered_bam)
         
     # Get bam header to check for chromosome nomenclature
     output = run_command(['samtools', 'view', '-@'+threads, '-H', bam])
