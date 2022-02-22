@@ -148,11 +148,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    paired = False
-    if len(args.file) == 0:
-        sys.exit('[genotype] Error: FASTQ required')
-    elif len(args.file) == 2:
-        paired = True
+    paired = not args.single
         
     if args.sample == None:
         sample = os.path.basename(args.file[0]).split('.')[0]
