@@ -116,6 +116,11 @@ if __name__ == '__main__':
                         help='keep intermediate files\n\n',
                         default=False)
                         
+    parser.add_argument('--single',
+                        action='store_true',
+                        help='Include flag if single-end reads. Default is paired-end.\n\n',
+                        default=False)
+
     parser.add_argument('-l',
                         '--avg', 
                         type=int,
@@ -130,10 +135,21 @@ if __name__ == '__main__':
                              'for single-end reads\n  default: 20\n\n',
                         default=20)
 
-    parser.add_argument('--single',
+    parser.add_argument('--LOH',
                         action='store_true',
-                        help='Include flag if single-end reads. Default is paired-end.\n\n',
+                        help='Include flag for estimated loss of heterozygosity. ' +
+                             'Must provide purity and ploidy estimates.\n\n',
                         default=False)
+
+    parser.add_argument('--purity',
+                        type=float,
+                        help='Estimated purity of sample\n  default: 1.0\n\n',
+                        default=1.0)
+
+    parser.add_argument('--ploidy',
+                        type=int,
+                        help='Estimated ploidy of sample\n  default: 2.0\n\n',
+                        default=2.0)
 
     parser.add_argument('-t',
                         '--threads', 
@@ -165,6 +181,7 @@ if __name__ == '__main__':
     gene_results_json = outdir + sample + '.quant.genes.json'
     allele_results_tsv = outdir + sample + '.quant.alleles.tsv'
     gene_results_tsv = outdir + sample + '.quant.genes.tsv'
+    loh_results_tsv = outdir + sample + '.quant.loh.tsv'
 
 
     with open(indv_p, 'rb') as file:
@@ -225,7 +242,7 @@ if __name__ == '__main__':
             tpm[gene] += kallisto_results.loc[int(idx)]['tpm']
 
     gene_results = {gene:defaultdict(int) for gene in genes}
-    
+
     allele_results = {gene:defaultdict(float) for gene in genes}
     
     total_hla_count = 0
@@ -269,4 +286,54 @@ if __name__ == '__main__':
         json.dump(gene_results, file)
         
     if not args.keep_files: run_command(['rm -rf', temp])
+
+    # LOH functionality
+    if(args.LOH):
+        corrections_columns = []
+
+        for gene in genes:
+            corrections_columns.append(gene+"_CN_1")
+            corrections_columns.append(gene+"_CN_2")
+            corrections_columns.append(gene+"_LOSS")
+            corrections_columns.append(gene+"_lost")
+
+        corrections_df=pd.DataFrame(columns = corrections_columns)
+
+        for gene in genes:
+            baf1 = allele_results[gene]['allele1_count'] / (allele_results[gene]['allele1_count'] + \
+                                                        allele_results[gene]['allele2_count'])
+            baf2 = 1-baf1
+
+            correction1 = (2*baf1*(1 + args.purity*(args.ploidy - 2)/2) + args.purity - 1)/(args.purity)
+            correction2 = (2*baf2*(1 + args.purity*(args.ploidy - 2)/2) + args.purity - 1)/(args.purity)
+
+            if correction1 < correction2:
+                minor = correction1
+                major = correction2
+            else:
+                minor = correction2
+                major = correction1
+
+            corrections_df.at[0,gene+"_CN_1"] = correction1
+            corrections_df.at[0,gene+"_CN_2"] = correction2
+
+            if (correction1 < 0.5) or (correction2 < 0.5):
+                corrections_df.at[0,gene+"_LOSS"] = True
+
+                if (correction1 < 0.5) and (correction2 < 0.5):
+                    corrections_df.at[0,gene+"_lost"] = ",".join(allele_results[gene][['allele1', \
+                                                            'allele2']].tolist())
+
+                elif (correction1 < 0.5) :
+                    corrections_df.at[0,gene+"_lost"] = allele_results[gene]['allele1']
+
+                else:
+                    corrections_df.at[0,gene+"_lost"] = allele_results[gene]['allele2']
+
+            else:
+                corrections_df.at[0,gene+"_LOSS"] = False
+                corrections_df.at[0,gene+"_lost"] = "none"
+
+    corrections_df.to_csv(loh_results_tsv,sep='\t',index=False)
+
 #-----------------------------------------------------------------------------
