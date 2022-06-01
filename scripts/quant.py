@@ -334,6 +334,6 @@ if __name__ == '__main__':
                 corrections_df.at[0,gene+"_LOSS"] = False
                 corrections_df.at[0,gene+"_lost"] = "none"
 
-    corrections_df.to_csv(loh_results_tsv,sep='\t',index=False)
+        corrections_df.to_csv(loh_results_tsv,sep='\t',index=False)
 
 #-----------------------------------------------------------------------------
