@@ -310,7 +310,6 @@ optional arguments:
  
 
 ## Citations ##
-Orenbuch R, Filip I, Comito D, et al (2019) arcasHLA: high resolution HLA typing from RNA seq. Bioinformatics doi:[10.1093/bioinformatics/btz474](http://dx.doi.org/10.1093/bioinformatics/btz474)
-
-Orenbuch R, Filip I, Rabadan R (2020) HLA Typing from RNA Sequencing and Applications to Cancer. Methods Mol. Biol. doi: 10.1007/978-1-0716-0327-7_5 (https://link.springer.com/protocol/10.1007%2F978-1-0716-0327-7_5)
-
+* Orenbuch R, Filip I, Comito D, et al (2019) arcasHLA: high resolution HLA typing from RNA seq. Bioinformatics doi:[10.1093/bioinformatics/btz474](http://dx.doi.org/10.1093/bioinformatics/btz474)
+* Orenbuch R, Filip I, Rabadan R (2020) HLA Typing from RNA Sequencing and Applications to Cancer. Methods Mol. Biol. doi: 10.1007/978-1-0716-0327-7_5 (https://link.springer.com/protocol/10.1007%2F978-1-0716-0327-7_5)
+* Filip, I., Wang, A., Kravets, O. et al. Pervasiveness of HLA allele-specific expression loss across tumor types. Genome Med 15, 8 (2023). https://doi.org/10.1186/s13073-023-01154-x
