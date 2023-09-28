@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build docker image
-      run: cd Docker && docker build -t <image_name> .
+      run: cd Docker && docker build -t test-arcas-hla .
     - name: Test with pytest
-      run: docker run pytest
+      run: docker run test-arcas-hla pytest
       
