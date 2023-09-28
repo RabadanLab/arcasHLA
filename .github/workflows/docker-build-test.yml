@@ -1,0 +1,22 @@
+name: Docker build and test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build docker image
+      run: cd Docker && docker build -t <image_name> .
+    - name: Test with pytest
+      run: docker run pytest
+      
