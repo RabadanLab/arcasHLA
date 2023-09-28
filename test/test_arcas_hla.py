@@ -32,7 +32,7 @@ def test_whole_allele_typing():
     )
     subprocess.run(whole_typing_cmd.split())
 
-    output_file = "./test/output/test.genotype.json"
+    output_file = f"{ROOT_DIR}/test/output/test.genotype.json"
     expected_output = {
         "A": ["A*01:01:01", "A*03:01:01"],
         "B": ["B*39:01:01", "B*07:02:01"],
@@ -55,7 +55,7 @@ def test_partial_allele_typing():
     )
     subprocess.run(partial_typing_cmd.split(), shell=True)
 
-    output_file = "./test/output/test.partial_genotype.json"
+    output_file = f"{ROOT_DIR}/test/output/test.partial_genotype.json"
     expected_output = {
         "A": ["A*01:01:01", "A*03:01:01"],
         "B": ["B*07:02:01", "B*39:39:01"],
