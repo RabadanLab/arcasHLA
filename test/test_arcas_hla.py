@@ -2,14 +2,17 @@
 import pytest
 import subprocess
 import json
+from os.path import dirname, abspath
 
+
+ROOT_DIR = dirname(dirname(abspath(__file__)))
 
 @pytest.fixture(scope="session", autouse=True)
 def set_reference_version():
     """
     Fetch IMGT/HLA database version 3.24.0 before test suite
     """
-    reference_cmd = "./arcasHLA reference --version 3.24.0"
+    reference_cmd = f"{ROOT_DIR}/arcasHLA reference --version 3.24.0"
     subprocess.run(reference_cmd.split())
 
 
@@ -18,13 +21,15 @@ def extract_reads():
     """
     Extract reads before typing tests
     """
-    extract_cmd = "./arcasHLA extract test/test.bam -o test/output -t 8 -v"
+    extract_cmd = f"{ROOT_DIR}/arcasHLA extract test/test.bam -o test/output -t 8 -v"
     subprocess.run(extract_cmd.split())
 
 
 def test_whole_allele_typing():
-    whole_typing_cmd = "./arcasHLA genotype test/output/test.extracted.1.fq.gz test/output/test.extracted.2.fq.gz " + \
-        "-g A,B,C,DPB1,DQB1,DQA1,DRB1 -o test/output -t 8 -v"
+    whole_typing_cmd = (
+        f"{ROOT_DIR}/arcasHLA genotype test/output/test.extracted.1.fq.gz "
+        f"test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1,DRB1 -o test/output -t 8 -v"
+    )
     subprocess.run(whole_typing_cmd.split())
 
     output_file = "./test/output/test.genotype.json"
@@ -43,8 +48,11 @@ def test_whole_allele_typing():
 
 
 def test_partial_allele_typing():
-    partial_typing_cmd = "./arcasHLA partial test/output/test.extracted.1.fq.gz test/output/test.extracted.2.fq.gz " + \
-        "-g A,B,C,DPB1,DQB1,DQA1,DRB1 -G test/output/test.genotype.json -o test/output -t 8 -v"
+    partial_typing_cmd = (
+        f"{ROOT_DIR}/arcasHLA partial test/output/test.extracted.1.fq.gz "
+        f"test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1,DRB1 -G test/output/test.genotype.json "
+        f"-o test/output -t 8 -v"
+    )
     subprocess.run(partial_typing_cmd.split(), shell=True)
 
     output_file = "./test/output/test.partial_genotype.json"
