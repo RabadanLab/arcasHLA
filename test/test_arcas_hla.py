@@ -10,7 +10,7 @@ def set_reference_version():
     Fetch IMGT/HLA database version 3.24.0 before test suite
     """
     reference_cmd = "./arcasHLA reference --version 3.24.0"
-    subprocess.run(reference_cmd.split(), shell=True)
+    subprocess.run(reference_cmd.split())
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -37,7 +37,6 @@ def test_whole_allele_typing():
         "DQB1": ["DQB1*02:02:01", "DQB1*06:09:01"],
         "DRB1": ["DRB1*10:01:01", "DRB1*14:02:01"]
     }
-
     with open(output_file, "r") as f:
         output = json.load(f)
     assert(output == expected_output)

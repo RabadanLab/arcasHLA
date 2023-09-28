@@ -9,11 +9,12 @@ Installs up-to-date versions of arcasHLA and all dependencies:
 - [bedtools v2.29.1](http://bedtools.readthedocs.io/)
 - [pigz v2.3.1](https://zlib.net/pigz/)
 - [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
-- Python 3.6
+- python 3.6
 - [Biopython v1.77](https://biopython.org/wiki/Download)
-- NumPy
-- SciPy
-- Pandas
+- numpy
+- scipy
+- pandas
+- pytest
 
 ### Build ###
 In order to use this arcasHLA container, install Docker and build in this directory:

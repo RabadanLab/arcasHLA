@@ -12,13 +12,14 @@ Make sure the following programs are in your `PATH`:
 - [bedtools v2.27.1](http://bedtools.readthedocs.io/)
 - [pigz v2.3.1](https://zlib.net/pigz/)
 - [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
-- Python 3.6
+- python 3.6
 
 arcasHLA requires the following Python modules:
 - [Biopython v1.77 (or lower)](https://biopython.org/wiki/Download)
-- NumPy
-- SciPy
-- Pandas
+- numpy
+- scipy
+- pandas
+- pytest
 
 ### Test ###
 In order to test arcasHLA partial typing, we need to roll back the reference to an earlier version. First, fetch IMGT/HLA database version 3.24.0:
