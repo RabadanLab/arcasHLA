@@ -39,11 +39,16 @@ def test_whole_allele_typing():
         "C": ["C*08:01:01", "C*01:02:01"],
         "DPB1": ["DPB1*14:01:01", "DPB1*02:01:02"],
         "DQA1": ["DQA1*02:01:01", "DQA1*05:03"],
-        "DQB1": ["DQB1*06:09:01", "DQB1*02:02:01"],
+        "DQB1": ["DQB1*02:02:01", "DQB1*06:09:01"],
         "DRB1": ["DRB1*10:01:01", "DRB1*14:02:01"]
     }
     with open(output_file, "r") as f:
         output = json.load(f)
+    
+    # Convert lists in output and expected output to sets since order does not matter for test
+    for key in output:
+        output[key] = set(output[key])
+        expected_output[key] = set(expected_output[key])
     assert(output == expected_output)
 
 
@@ -62,9 +67,14 @@ def test_partial_allele_typing():
         "C": ["C*08:01:01", "C*01:02:01"],
         "DPB1": ["DPB1*14:01:01", "DPB1*02:01:02"],
         "DQA1": ["DQA1*02:01:01", "DQA1*05:03"],
-        "DQB1": ["DQB1*02:02:01", "DQB1*06:04:01"],
+        "DQB1": ["DQB1*06:04:01", "DQB1*02:02:01"],
         "DRB1": ["DRB1*03:02:01", "DRB1*14:02:01"]
     }
     with open(output_file, "r") as f:
         output = json.load(f)
+    
+    # Convert lists in output and expected output to sets since order does not matter for test
+    for key in output:
+        output[key] = set(output[key])
+        expected_output[key] = set(expected_output[key])
     assert(output == expected_output)
