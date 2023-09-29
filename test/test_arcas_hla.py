@@ -53,7 +53,7 @@ def test_partial_allele_typing():
         f"test/output/test.extracted.2.fq.gz -g A,B,C,DPB1,DQB1,DQA1,DRB1 -G test/output/test.genotype.json "
         f"-o test/output -t 8 -v"
     )
-    subprocess.run(partial_typing_cmd.split(), shell=True)
+    subprocess.run(partial_typing_cmd.split())
 
     output_file = f"{ROOT_DIR}/test/output/test.partial_genotype.json"
     expected_output = {
