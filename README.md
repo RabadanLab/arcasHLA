@@ -22,6 +22,15 @@ arcasHLA requires the following Python modules:
 - pytest
 
 ### Test ###
+
+**Update 2023-09-29**: The below tests are now implemented as a pytest (suite)[./test/test_arcas_hla.py]. You can run this locally by building the docker environment and running pytest. From the current directory:
+
+```
+docker build -t <image-name> -f Docker/Dockerfile .
+docker run --rm -v /path/to/repo:/home <image-name> pytest
+```
+-----
+
 In order to test arcasHLA partial typing, we need to roll back the reference to an earlier version. First, fetch IMGT/HLA database version 3.24.0:
 ```
 ./arcasHLA reference --version 3.24.0
