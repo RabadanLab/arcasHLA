@@ -23,7 +23,7 @@ arcasHLA requires the following Python modules:
 
 ### Test ###
 
-**Update 2023-09-29**: The below tests are now implemented as a pytest (suite)[./test/test_arcas_hla.py]. You can run this locally by building the docker environment and running pytest. From the current directory:
+**(Update 2023-09-29)**: The below tests are now implemented as a pytest [suite](./test/test_arcas_hla.py). You can run this locally by building the docker environment and running pytest. From the current directory:
 
 ```
 docker build -t <image-name> -f Docker/Dockerfile .
