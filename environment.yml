@@ -1,0 +1,14 @@
+name: arcas-hla
+channels:
+- bioconda
+- defaults
+dependencies:
+- bedtools==2.26.0
+- kallisto==0.44.0
+- pip==23.3.1
+- python==3.11.5
+- samtools==1.5
+- pip:
+  - biopython==1.83
+  - numpy==1.26.3
+  - scipy==1.12.0
