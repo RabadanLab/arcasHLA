@@ -7,19 +7,11 @@ arcasHLA requires the following utilities:
 - [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
 - coreutils
 
-Make sure the following programs are in your `PATH`:
-- [Samtools v1.19](http://www.htslib.org/)
-- [bedtools v2.27.1](http://bedtools.readthedocs.io/)
-- [pigz v2.3.1](https://zlib.net/pigz/)
-- [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
-- python 3.6
-
-arcasHLA requires the following Python modules:
-- [Biopython v1.77 (or lower)](https://biopython.org/wiki/Download)
-- numpy
-- scipy
-- pandas
-- pytest
+Install and activate the required conda environment `arcas-hla` through the `[environment.yml](./environment.yml) file:
+```
+conda create -n environment.yml
+conda activate arcas-hla
+```
 
 ### Test ###
 
