@@ -19,7 +19,7 @@ conda activate arcas-hla
 
 ```
 docker build -t <image-name> -f Docker/Dockerfile .
-docker run --rm -v /path/to/repo:/home <image-name> pytest
+docker run --rm -v /path/to/repo:/app <image-name> pytest
 ```
 -----
 

@@ -18,4 +18,4 @@ jobs:
     - name: Build docker image
       run: docker build -t test-arcas-hla -f Docker/Dockerfile .
     - name: Test with pytest
-      run: docker run --rm -v $GITHUB_WORKSPACE:/home test-arcas-hla pytest
+      run: docker run --rm -v $GITHUB_WORKSPACE:/app test-arcas-hla pytest
