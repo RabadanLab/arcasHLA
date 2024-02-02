@@ -7,7 +7,7 @@ arcasHLA requires the following utilities:
 - [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
 - coreutils
 
-Install and activate the required conda environment `arcas-hla` through the `[environment.yml](./environment.yml) file:
+Install and activate the required conda environment `arcas-hla` through the [environment.yml](./environment.yml) file:
 ```
 conda env create -n environment.yml
 conda activate arcas-hla
