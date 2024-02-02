@@ -9,7 +9,7 @@ arcasHLA requires the following utilities:
 
 Install and activate the required conda environment `arcas-hla` through the [environment.yml](./environment.yml) file:
 ```
-conda env create -n environment.yml
+conda env create -f environment.yml
 conda activate arcas-hla
 ```
 
