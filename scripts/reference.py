@@ -74,7 +74,7 @@ parameters_json  = rootDir + 'dat/info/parameters.json'
 #   Fetch and process IMGTHLA database
 #-------------------------------------------------------------------------------
 def get_mode(lengths):
-    return stats.mode(lengths)[0][0]
+    return stats.mode(lengths)[0]
 
 def check_ref():
     '''Check if IMGTHLA and constructed HLA references exist.'''

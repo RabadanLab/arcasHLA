@@ -1,0 +1,22 @@
+name: Docker build and test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Docker build and test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build docker image
+      run: docker build -t test-arcas-hla -f Docker/Dockerfile .
+    - name: Test with pytest
+      run: docker run --rm -v $GITHUB_WORKSPACE:/app test-arcas-hla pytest

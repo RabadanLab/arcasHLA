@@ -7,20 +7,22 @@ arcasHLA requires the following utilities:
 - [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
 - coreutils
 
-Make sure the following programs are in your `PATH`:
-- [Samtools v1.19](http://www.htslib.org/)
-- [bedtools v2.27.1](http://bedtools.readthedocs.io/)
-- [pigz v2.3.1](https://zlib.net/pigz/)
-- [Kallisto v0.44.0](https://pachterlab.github.io/kallisto/)
-- Python 3.6
-
-arcasHLA requires the following Python modules:
-- [Biopython v1.77 (or lower)](https://biopython.org/wiki/Download)
-- NumPy
-- SciPy
-- Pandas
+Install and activate the required conda environment `arcas-hla` through the [environment.yml](./environment.yml) file:
+```
+conda env create -f environment.yml
+conda activate arcas-hla
+```
 
 ### Test ###
+
+**(Update 2023-09-29)**: The below tests are now implemented as a pytest [suite](./test/test_arcas_hla.py). You can run this locally by building the docker environment and running pytest. From the current directory:
+
+```
+docker build -t <image-name> -f Docker/Dockerfile .
+docker run --rm -v /path/to/repo:/app <image-name> pytest
+```
+-----
+
 In order to test arcasHLA partial typing, we need to roll back the reference to an earlier version. First, fetch IMGT/HLA database version 3.24.0:
 ```
 ./arcasHLA reference --version 3.24.0
@@ -310,7 +312,6 @@ optional arguments:
  
 
 ## Citations ##
-Orenbuch R, Filip I, Comito D, et al (2019) arcasHLA: high resolution HLA typing from RNA seq. Bioinformatics doi:[10.1093/bioinformatics/btz474](http://dx.doi.org/10.1093/bioinformatics/btz474)
-
-Orenbuch R, Filip I, Rabadan R (2020) HLA Typing from RNA Sequencing and Applications to Cancer. Methods Mol. Biol. doi: 10.1007/978-1-0716-0327-7_5 (https://link.springer.com/protocol/10.1007%2F978-1-0716-0327-7_5)
-
+* Orenbuch R, Filip I, Comito D, et al (2019) arcasHLA: high resolution HLA typing from RNA seq. Bioinformatics doi:[10.1093/bioinformatics/btz474](http://dx.doi.org/10.1093/bioinformatics/btz474)
+* Orenbuch R, Filip I, Rabadan R (2020) HLA Typing from RNA Sequencing and Applications to Cancer. Methods Mol. Biol. doi: 10.1007/978-1-0716-0327-7_5 (https://link.springer.com/protocol/10.1007%2F978-1-0716-0327-7_5)
+* Filip, I., Wang, A., Kravets, O. et al. Pervasiveness of HLA allele-specific expression loss across tumor types. Genome Med 15, 8 (2023). https://doi.org/10.1186/s13073-023-01154-x
