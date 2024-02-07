@@ -78,25 +78,25 @@ def convert_allele(allele, resolution):
             
         # Output: P-group allele
         elif resolution == 'p-group': 
-            if allele[:-1] in p_group[i]:
-                allele = p_group[i][allele[:-1]]
+            if allele[:-1] in p_group[str(i)]:
+                allele = p_group[str(i)][allele[:-1]]
 
-            elif process_allele(allele[:-1], i - 1) in p_group[i]:
-                allele = p_group[i][process_allele(allele[:-1], i -1)]
+            elif process_allele(allele[:-1], i - 1) in p_group[str(i)]:
+                allele = p_group[str(i)][process_allele(allele[:-1], i -1)]
 
     # Input: ungrouped allele
     # Output: G-group allele
     elif resolution == 'g-group':
-        if allele in g_group[i]:
-            allele = g_group[i][allele]
+        if allele in g_group[str(i)]:
+            allele = g_group[str(i)][allele]
         elif allele[-1] != 'N':
             allele = process_allele(allele,3)
 
     # Input: ungrouped allele
     # Output: P-group allele
     elif resolution == 'p-group':
-        if allele in p_group[i]:
-            allele = p_group[i][allele]
+        if allele in p_group[str(i)]:
+            allele = p_group[str(i)][allele]
             
     # Input: ungrouped allele
     # Output: reduced resolution, ungrouped allele
