@@ -5,9 +5,13 @@ channels:
 dependencies:
 - bedtools==2.31.1
 - biopython==1.83
+- coreutils==9.4
+- git==2.43.0
+- git-lfs==3.4.1
 - kallisto==0.44.0
 - numpy==1.26.4
 - pandas==2.2.0
+- pigz==2.8
 - pip==24.0
 - pyarrow==15.0.0
 - pytest==8.0.0
