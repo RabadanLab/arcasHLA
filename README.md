@@ -1,13 +1,13 @@
 ### Dependencies ###
 
-`arcasHLA` can be installed through bioconda with
+Install `arcasHLA` through bioconda with
 ```
 conda install arcas-hla -c bioconda -c conda-forge
 conda activate arcas-hla
 ```
 **Important**: Please include channels `bioconda` and `conda-forge` as above.
 
-`arcas-hla` can also be installed through the [environment.yml](./environment.yml) file in this repo:
+`arcasHLA` can also be installed through the [environment.yml](./environment.yml) file in this repo:
 ```
 conda env create -f environment.yml
 conda activate arcas-hla
