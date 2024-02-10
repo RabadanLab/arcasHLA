@@ -1,6 +1,6 @@
 ### Dependencies ###
 
-Install `arcasHLA` through bioconda with
+Install `arcasHLA` through bioconda with:
 ```
 conda install arcas-hla -c bioconda -c conda-forge
 conda activate arcas-hla
