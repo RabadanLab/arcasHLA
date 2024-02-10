@@ -1,13 +1,13 @@
-# arcasHLA: high resolution HLA typing from RNA seq #
-
-arcasHLA performs high resolution genotyping for HLA class I and class II genes from RNA sequencing, supporting both paired and single-end samples.
-
 ### Dependencies ###
-arcasHLA requires the following utilities:
-- [Git Large File Storage](https://github.com/git-lfs/git-lfs/wiki/Installation)
-- coreutils
 
-Install and activate the required conda environment `arcas-hla` through the [environment.yml](./environment.yml) file:
+`arcasHLA` can be installed through bioconda with
+```
+conda install arcas-hla -c bioconda -c conda-forge
+conda activate arcas-hla
+```
+**Important**: Please include channels `bioconda` and `conda-forge` as above.
+
+`arcas-hla` can also be installed through the [environment.yml](./environment.yml) file in this repo:
 ```
 conda env create -f environment.yml
 conda activate arcas-hla
