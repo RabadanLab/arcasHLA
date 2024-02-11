@@ -3,7 +3,6 @@
 Install `arcasHLA` through bioconda with:
 ```
 conda install arcas-hla -c bioconda -c conda-forge
-conda activate arcas-hla
 ```
 **Important**: Please include channels `bioconda` and `conda-forge` as above.
 
