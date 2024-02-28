@@ -85,7 +85,7 @@ def check_ref():
         build_fasta()
         
 def fetch_hla_dat():
-    '''Clones IMGTHLA github to database.'''
+    '''Clones IMGTHLA github to database. Git lfs pull to be sure to download all needed files'''
     
     if isdir(IMGTHLA):
         run_command(['rm', '-rf', IMGTHLA])
@@ -93,6 +93,11 @@ def fetch_hla_dat():
     command = ['git', 'clone', IMGTHLA_git, IMGTHLA]
     run_command(command,
                 '[reference] Cloning IMGT/HLA database:')
+
+    ## run git lfs pull
+    command = ['git', '-C', IMGTHLA, "lfs", "pull"]
+    run_command(command,
+                '[reference] pull large files')
     
 def checkout_version(commithash, verbose = True):
     '''Checks out a specific IMGTHLA github version given a commithash.'''
