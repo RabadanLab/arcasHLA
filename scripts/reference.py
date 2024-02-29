@@ -93,12 +93,12 @@ def fetch_hla_dat():
     command = ['git', 'clone', IMGTHLA_git, IMGTHLA]
     run_command(command,
                 '[reference] Cloning IMGT/HLA database:')
-
+                
     ## run git lfs pull
     command = ['git', '-C', IMGTHLA, "lfs", "pull"]
     run_command(command,
                 '[reference] pull large files')
-    
+
 def checkout_version(commithash, verbose = True):
     '''Checks out a specific IMGTHLA github version given a commithash.'''
     
@@ -110,6 +110,12 @@ def checkout_version(commithash, verbose = True):
         run_command(command, '[reference] Checking out IMGT/HLA:')
     else:
         run_command(command)
+
+    ## run git lfs pull
+    command = ['git', '-C', IMGTHLA, "lfs", "pull"]
+    run_command(command,
+                '[reference] pull large files')
+    
         
 def hla_dat_version(print_version = False):
     '''Returns commithash of downloaded IMGTHLA database.'''
