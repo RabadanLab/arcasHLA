@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 #   arcas_utilities.py: functions common to multiple arcasHLA scripts.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 #   This file is part of arcasHLA.
 #
 #   arcasHLA is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with arcasHLA.  If not, see <https://www.gnu.org/licenses/>.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 import os
 import re
@@ -28,79 +28,89 @@ import logging as log
 import uuid
 from subprocess import PIPE, STDOUT, run
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-__version__     = '0.4.0'
-__date__        = '2022-01-27'
+__version__ = "0.4.0"
+__date__ = "2022-01-27"
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-def process_allele(allele, n, keep_alpha = True):
-    '''Lowers allele resolution to n-fields.'''
+
+def process_allele(allele, n, keep_alpha=True):
+    """Lowers allele resolution to n-fields."""
     temp = []
     alpha = False
-    fields = allele.split(':')
-    
+    fields = allele.split(":")
+
     if fields[-1][-1].isalpha():
         if keep_alpha and len(fields) < 3:
             alpha = fields[-1][-1]
         fields[-1] = fields[-1][:-1]
 
     out = fields[:n]
-    out = ':'.join(out)
-    
-    if alpha: out += alpha
+    out = ":".join(out)
+
+    if alpha:
+        out += alpha
     return out
 
+
 def get_gene(allele):
-    '''Returns gene of an allele.'''
-    return allele.split('*')[0]
+    """Returns gene of an allele."""
+    return allele.split("*")[0]
+
 
 def check_path(path):
-    '''Check if path exists and if it is terminated by "/".'''
+    """Check if path exists and if it is terminated by "/"."""
     if not os.path.isdir(path):
-        run_command(['mkdir',path])
-        
-    if path[-1] != '/': path += '/'
-        
+        run_command(["mkdir", path])
+
+    if path[-1] != "/":
+        path += "/"
+
     return path
 
+
 def remove_files(files, keep_files):
-    '''Removes intermediate files.'''
+    """Removes intermediate files."""
     if keep_files:
         return
 
     if type(files) == list:
         for file in files:
-            run_command(['rm -rf',file])
+            run_command(["rm -rf", file])
     else:
-        run_command(['rm -rf',files])
-        
-def run_command(command, message = ''):
-    '''Outputs message and command to log, runs command and returns output.'''
-    if type(command) == list:
-        command = ' '.join(command)
+        run_command(["rm -rf", files])
 
-    if message: 
-        log.info(''.join([message,'\n\n\t', command,'\n']))
-    
-    output = run(command, shell=True, stdout=PIPE, stderr=PIPE)
-    
+
+def run_command(command, message=""):
+    """Outputs message and command to log, runs command and returns output."""
+    if type(command) == list:
+        command = " ".join(command)
+
     if message:
-        stderr = '\t' + output.stderr.decode('utf-8')
-        stderr = re.sub('\n','\n\t',stderr)
+        log.info("".join([message, "\n\n\t", command, "\n"]))
+
+    output = run(command, shell=True, stdout=PIPE, stderr=PIPE)
+
+    if message:
+        stderr = "\t" + output.stderr.decode("utf-8")
+        stderr = re.sub("\n", "\n\t", stderr)
         if len(stderr) > 1:
             log.info(stderr)
-        
+
     return output
 
+
 def create_temp(temp):
-    '''Generates name for temporary folder.'''
+    """Generates name for temporary folder."""
     temp = check_path(temp)
-    temp_folder = ''.join([temp,'arcas_' + str(uuid.uuid4())])
+    temp_folder = "".join([temp, "arcas_" + str(uuid.uuid4())])
     return check_path(temp_folder)
 
-def hline():
-    log.info('-'*80)
 
-#-------------------------------------------------------------------------------
+def hline():
+    log.info("-" * 80)
+
+
+# -------------------------------------------------------------------------------

@@ -1,20 +1,21 @@
 name: arcas-hla
 channels:
-- bioconda
-- conda-forge
+  - nodefaults
+  - conda-forge
+  - bioconda
 dependencies:
-- bedtools==2.31.1
-- biopython==1.83
-- coreutils==9.4
-- git==2.43.0
-- git-lfs==3.4.1
-- kallisto==0.44.0
-- numpy==1.26.4
-- pandas==2.2.0
-- pigz==2.8
-- pip==24.0
-- pyarrow==15.0.0
-- pytest==8.0.0
-- python==3.10.0
-- samtools==1.19.2
-- scipy==1.12.0
+  - bedtools==2.31.1
+  - biopython==1.83
+  - coreutils==9.4
+  - git==2.43.0
+  - git-lfs==3.4.1
+  - kallisto==0.44.0
+  - numpy==1.26.4
+  - pandas==2.2.0
+  - pigz==2.8
+  - pip==24.0
+  - pyarrow==15.0.0
+  - pytest==8.0.0
+  - python==3.10.0
+  - samtools==1.19.2
+  - scipy==1.12.0

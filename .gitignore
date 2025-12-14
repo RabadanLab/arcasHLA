@@ -2,3 +2,24 @@ clean_ref
 *.log
 __pycache__/
 arcashla_latest.sif
+
+# IDE specific configs
+.vscode
+
+# Reference fasta files
+dat/ref/GRCh38.all.noHLA.fasta
+dat/ref/GRCh38.chr6.HLA.fasta
+dat/ref/GRCh38.chr6.noHLA.fasta
+
+# HLA reference
+dat/IMGTHLA
+dat/ref/hla.convert.json
+dat/ref/hla.fasta
+dat/ref/hla.idx
+dat/ref/hla.p.json
+dat/ref/hla_partial.fasta
+dat/ref/hla_partial.idx
+dat/ref/hla_partial.p.json
+
+# Test bam index
+test/*.bai

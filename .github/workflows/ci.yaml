@@ -1,0 +1,46 @@
+name: Continuous integration tasks
+on: [push]
+
+jobs:
+  lint:
+    runs-on: "ubuntu-24.04"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: dev_environment.conda-lock.yml
+          environment-name: ci-conda-env
+          init-shell: bash
+          # Ensure issues with the channel priority in the environment are
+          # caught.
+          condarc: |
+            channel_priority: strict
+          # Persist the environment for all runs using this lockfile.
+          cache-environment: true
+          cache-environment-key: environment-${{ hashFiles('dev_environment.conda-lock.yml')
+            }}
+          post-cleanup: "none"
+      - run: |
+          make lint
+        shell: bash -el {0}
+  tests:
+    runs-on: "ubuntu-24.04"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: dev_environment.conda-lock.yml
+          environment-name: ci-conda-env
+          init-shell: bash
+          # Ensure issues with the channel priority in the environment are
+          # caught.
+          condarc: |
+            channel_priority: strict
+          # Persist the environment for all runs using this lockfile.
+          cache-environment: true
+          cache-environment-key: environment-${{ hashFiles('dev_environment.conda-lock.yml')
+            }}
+          post-cleanup: "none"
+      - run: |
+          make test
+        shell: bash -el {0}

@@ -1,0 +1,14 @@
+channels:
+  - nodefaults
+  - conda-forge
+  # Needs to be included to be able to create a lockfile together with the
+  # main env file. Not currently needed per se.
+  - bioconda
+dependencies:
+  - black
+  - fd-find
+  - make
+  - mdformat
+  - mdformat-gfm
+  - pytest==8.0.0
+  - yamlfmt
