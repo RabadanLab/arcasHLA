@@ -46,15 +46,15 @@ __date__        = '2022-01-27'
 
 def index_bam(bam):
     '''Attempts to index BAM if .bai file is not found.'''
-    if not isfile(''.join([bam, '.bai'])):
+    if not isfile(''.join([bam, '.bai'])) and not isfile(''.join([bam, '.crai'])):
         run_command(['samtools', 'index', bam], 
                     '[extract] indexing bam: ')
                     
-    if not isfile(''.join([bam, '.bai'])):
+    if not isfile(''.join([bam, '.bai'])) and not isfile(''.join([bam, '.crai'])):
         sys.exit('[extract] Error: unable to index bam file.')
         
 
-def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
+def extract_reads(bam, outdir, cram_reference, paired, unmapped, alts, temp, threads):
     '''Extracts reads from chromosome 6 and alts/decoys if applicable.'''
     
     log.info(f'[extract] Extracting reads from {bam}')
@@ -98,6 +98,9 @@ def extract_reads(bam, outdir, paired, unmapped, alts, temp, threads):
         
         if paired: command.append('-f 12')
         else: command.append('-f 4')
+
+        if bam.endswith(".cram"):
+            command.append(f'-T {cram_reference}')
         
         command.extend([bam, '>>', hla_filtered])
         run_command(command, message)
@@ -232,6 +235,12 @@ if __name__ == '__main__':
                         type = str,
                         default='1')
     
+    parser.add_argument('-r',
+                        '--reference', 
+                        type = str,
+                        help = 'If using CRAM input, this is the FASTA genome used to generate the CRAM',
+                        default='GRCh38_full_analysis_set_plus_decoy_hla.fa')
+    
     parser.add_argument('-v',
                         '--verbose', 
                         action = 'count',
@@ -287,6 +296,7 @@ if __name__ == '__main__':
     else:
         extract_reads(args.bam,
                       outdir,
+                      args.reference,
                       not args.single,
                       args.unmapped,
                       alts,

@@ -23,6 +23,7 @@
 #-------------------------------------------------------------------------------
 
 
+import csv
 import sys
 import re
 import json
@@ -64,6 +65,8 @@ hla_nom_p        = rootDir + 'dat/IMGTHLA/wmda/hla_nom_p.txt'
 hla_convert_json = rootDir + 'dat/ref/hla.convert.json'
 hla_fa           = rootDir + 'dat/ref/hla.fasta'
 partial_fa       = rootDir + 'dat/ref/hla_partial.fasta'
+# Common, intermediate and well-documented HLA alleles
+ciwd_csv         = rootDir + 'dat/ref/ciwd.3.0.0.csv'
 hla_json         = rootDir + 'dat/ref/hla.p.json'
 partial_json     = rootDir + 'dat/ref/hla_partial.p.json'
 hla_idx          = rootDir + 'dat/ref/hla.idx'
@@ -76,13 +79,12 @@ parameters_json  = rootDir + 'dat/info/parameters.json'
 def get_mode(lengths):
     return stats.mode(lengths)[0]
 
-def check_ref():
+def check_ref(ciwd_only):
     '''Check if IMGTHLA and constructed HLA references exist.'''
-    
     if not isfile(hla_dat):
         fetch_hla_dat()
         build_convert(False)
-        build_fasta()
+        build_fasta(ciwd_only)
         
 def fetch_hla_dat():
     '''Clones IMGTHLA github to database.'''
@@ -116,7 +118,7 @@ def hla_dat_version(print_version = False):
     
     return commit[:-1]
 
-def process_hla_dat():
+def process_hla_dat(ciwd_only, ciwd_alleles):
     '''Processes IMGTHLA database, returning HLA sequences, exon locations, 
        lists of complete and partial alleles and possible exon combinations.
     '''
@@ -143,7 +145,7 @@ def process_hla_dat():
     for line in lines:
         # Denotes end of sequence, add allele to database
         if line.startswith('//'):
-            if sequence and allele in exons:
+            if sequence and allele in exons and (not ciwd_only or allele in ciwd_alleles):
                 sequences[allele] = seq
                 gene_exons[gene].add(number)
                 gene_set.add(gene)
@@ -308,7 +310,16 @@ def get_exon_combinations():
             exon_combinations.append(sorted(exon_set | {'1'}))
     return exon_combinations
     
-def build_fasta():
+def get_column_set(filepath, column_name):
+   unique_values = set()
+   with open(filepath, mode="r", encoding="utf-8") as f:
+      reader = csv.DictReader(f)
+      for row in reader:
+          if column_name in row:
+             unique_values.add(row[column_name])
+   return unique_values
+
+def build_fasta(ciwd_only):
     '''Constructs HLA reference from processed sequences and exon locations.'''
     
     log.info('[reference] IMGT/HLA database version:\n')
@@ -427,9 +438,13 @@ def build_fasta():
         
         return seq_out, allele_idx, lengths, exon_idx
 
+    ciwd_alleles = []
+    if ciwd_only:
+        log.info('[reference] Loading Common, Intermediate, and Well-Documented v3 (2020) HLA allele set to narrow the search database, see doi:10.1111/tan.13811')
+        ciwd_alleles = get_column_set(ciwd_csv, "ALLELE")
     
     (complete_alleles, partial_alleles, gene_set, sequences, 
-         utrs, exons, final_exon_length) = process_hla_dat()
+         utrs, exons, final_exon_length) = process_hla_dat(ciwd_only, ciwd_alleles)
                        
     exon_combinations = get_exon_combinations()
     
@@ -538,6 +553,10 @@ if __name__ == '__main__':
                         default=False,
                         metavar='',)
                         
+    parser.add_argument('--ciwd', 
+                        help='restrict the database generated to the Common, Intermediate and Well-Documented HLA alleles (v3, from 2020)\n\n', 
+                        action='store_true')
+
     parser.add_argument('--commit', 
                         type = str, 
                         help='checkout IMGT/HLA version using commithash\n\n', 
@@ -566,27 +585,27 @@ if __name__ == '__main__':
         log.info('[reference] Updating HLA reference')
         checkout_version('origin')
         build_convert(False)
-        build_fasta()
+        build_fasta(args.ciwd)
         
         
     elif args.rebuild:
         build_convert()
-        build_fasta()
+        build_fasta(args.ciwd)
         
     elif args.version:
         if args.version not in versions:
             sys.exit('[reference] Error: invalid version.')
         checkout_version(versions[args.version])
-        build_fasta()
+        build_fasta(args.ciwd)
         build_convert()
         
     elif args.commit:
         checkout_version(args.commit)
-        build_fasta()
+        build_fasta(args.ciwd)
         build_convert()
 
     else:
-        check_ref()
+        check_ref(args.ciwd)
         hla_dat_version(True)
     
     hline()
