@@ -697,7 +697,7 @@ if __name__ == '__main__':
        
     # Checks if HLA reference exists
     check_path(rootDir + 'dat/ref')
-    check_ref()
+    check_ref(False)
     
     # Loads reference information
     #with open(hla_p, 'rb') as file:
